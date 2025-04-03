@@ -16,6 +16,7 @@
   "packageManager": "pnpm@10.6.5",
   "dependencies": {
     "express": "^5.1.0",
+    "express-validator": "^7.2.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
   },

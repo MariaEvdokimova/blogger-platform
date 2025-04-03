@@ -1,0 +1,230 @@
+paths:
+  /posts:
+    get:
+      summary: Returns all posts
+      tags: [ Posts ]
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostBlogViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+    post:
+      summary: Create new post
+      tags: [ Posts ]
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        description: Data for constructing new Post entity
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+      responses:
+        201:
+          description: Returns the newly created post
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+  /posts/{id}:
+    get:
+      summary: Returns post by id
+      tags: [ Posts ]
+      parameters:
+        - name: id
+          in: path
+          description: Id of existing post
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.PostViewModel'
+        404:
+          description: "Not Found"
+    put:
+      summary: Update existing post by id with InputModel
+      tags: [ Posts ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Data for updating
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/h02.db.PostInputModel'
+      responses:
+        204:
+          description: "No Content"
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+        404:
+          description: "Not Found"        
+    delete:
+      summary: Delete post specified by id
+      tags: [ Posts ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Post id
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: "No Content"
+        401: 
+          description: Unauthorized
+        404:
+          description: "Not Found"  
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Enter JWT Bearer token only"
+    basicAuth:
+      type: http
+      scheme: basic
+      description: "Username and Password"
+    refreshToken:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: "JWT refreshToken inside cookie. Must be correct, and must not expire"
+
+  schemas:
+    APIErrorResult:
+      type: object
+      properties:
+        errorsMessages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+    
+    FieldError:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          description: "Message with error explanation for certain field"
+        field:
+          type: string
+          nullable: true
+          description: "What field/property of input model has error"
+
+    h02.db.PostInputModel:
+      type: object
+      required:
+        - title
+        - shortDescription
+        - content
+        - blogId
+      properties:
+        title:
+          type:	string
+          maxLength: 30
+        shortDescription:
+          type: string
+          maxLength: 100
+        content:	
+          type: string
+          maxLength: 1000
+        blogId:
+          type: string
+
+    h02.db.PostViewModel:
+      type: object
+      required:
+        - id
+        - title
+        - shortDescription
+        - content
+        - blogId
+        - blogName
+      properties:
+        id:	
+          type: string
+        title:	
+          type: string
+        shortDescription:	
+          type: string
+        content:	
+          type: string
+        blogId:
+          type: string
+        blogName:
+          type: string

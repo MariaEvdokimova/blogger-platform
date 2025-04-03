@@ -1,0 +1,10 @@
+openapi: 3.0.0
+info:
+  title: Blog and Post API
+  version: 1.0.0
+  description: Blogger platform API documentation
+
+tags:
+  - name: Blogs
+  - name: Posts
+  - name: Testing
