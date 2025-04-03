@@ -1,0 +1,11 @@
+tags:
+  - name: Testing
+
+paths:
+  /testing/all-data:
+    delete:
+      summary: "Clear database: delete all data from all tables/collections"
+      tags: [ Testing ]
+      responses:
+        204:
+          description: All data is deleted

@@ -1,0 +1,223 @@
+paths:
+  /blogs:
+    get:
+      summary: Returns all blogs
+      tags: [ Blogs ]
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+    post:
+      summary: Create new blog
+      tags: [ Blogs ]
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        description: Data for constructing new Blog entity
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+      responses:
+        201:
+          description: Returns the newly created blog
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+  /blogs/{id}:
+    get:
+      summary: Returns blog by id
+      tags: [ Blogs ]
+      parameters:
+        - name: id
+          in: path
+          description: Existing blog id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h02.db.BlogViewModel'
+        404:
+          description: "Not Found"
+    put:
+      summary: Update existing blog by id with InputModel
+      tags: [ Blogs ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Data for updating
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogInputModel'
+      responses:
+        204:
+          description: "No Content"
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+        404:
+          description: "Not Found"        
+    delete:
+      summary: Delete blog specified by id
+      tags: [ Blogs ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: Blog id
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: "No Content"
+        401: 
+          description: Unauthorized
+        404:
+          description: "Not Found"  
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Enter JWT Bearer token only"
+    basicAuth:
+      type: http
+      scheme: basic
+      description: "Username and Password"
+    refreshToken:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: "JWT refreshToken inside cookie. Must be correct, and must not expire"
+
+  schemas:
+    APIErrorResult:
+      type: object
+      properties:
+        errorsMessages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+    
+    FieldError:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          description: "Message with error explanation for certain field"
+        field:
+          type: string
+          nullable: true
+          description: "What field/property of input model has error"
+    
+    h02.db.BlogInputModel:
+      type: object
+      required:
+        - name
+        - description
+        - websiteUrl
+      properties:
+        name:
+          type:	string
+          maxLength: 15
+        description:
+          type: string
+          maxLength: 500
+        websiteUrl:	
+          type: string
+          maxLength: 100
+          pattern: ^https://([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$
+
+    h02.db.BlogViewModel:
+      type: object
+      required:
+        - id
+        - name
+        - description
+        - websiteUrl
+      properties:
+        id:	
+          type: string
+        name:	
+          type: string
+        description:	
+          type: string
+        websiteUrl:	
+          type: string
+  
