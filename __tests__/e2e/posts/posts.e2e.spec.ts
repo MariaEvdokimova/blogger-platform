@@ -10,6 +10,8 @@ import { createPost } from "../../utils/posts/create-post";
 import { POSTS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getPostById } from "../../utils/posts/get-post-by-id";
+import { runDB } from "../../../src/db/mongo.db";
+import { SETTINGS } from "../../../src/core/settings/settings";
 
 describe('POST API', () => {
   const app = express();
@@ -18,6 +20,7 @@ describe('POST API', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
     await clearDb(app);
   });
 

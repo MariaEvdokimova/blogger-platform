@@ -12,6 +12,8 @@ import { BLOGS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createBlog } from "../../utils/blogs/create-blog";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
+import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { SETTINGS } from "../../../src/core/settings/settings";
 
 
 describe('Blogs API body validation check', () => {
@@ -23,7 +25,12 @@ describe('Blogs API body validation check', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
     await clearDb(app);
+  });
+
+  afterAll(async () => {
+    await stopDb();
   });
 
   it('❌ should not create blog when incorrect body passed; POST /blogs', async () => {
@@ -91,7 +98,7 @@ describe('Blogs API body validation check', () => {
       const blogResponse = await getBlogById(app, createdBlog.id);
 
       expect(blogResponse).toEqual({
-        ...correctTestBlogsData,
+        ...createdBlog,
         id: createdBlog.id,
       });
       

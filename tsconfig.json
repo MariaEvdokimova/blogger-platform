@@ -5,6 +5,7 @@
     "rootDir": "./src",
     "outDir": "./dist",
     "moduleResolution": "node", // Правильное разрешение модулей
+    "types": ["node", "jest"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
 

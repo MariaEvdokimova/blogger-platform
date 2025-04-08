@@ -10,6 +10,8 @@ import { BlogInputDto } from "../../../src/blogs/dto/blog.input-dto";
 import { getBlogDto } from "../../utils/blogs/get-blog-dto";
 import { POSTS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
+import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { SETTINGS } from "../../../src/core/settings/settings";
 
 
 describe('Posts API body validation check', () => {
@@ -19,7 +21,12 @@ describe('Posts API body validation check', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
     await clearDb(app);
+  });
+
+  afterAll(async () => {
+    await stopDb();
   });
 
   it('❌ should not create post when incorrect body passed; POST /posts', async () => {

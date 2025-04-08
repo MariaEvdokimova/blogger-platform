@@ -13,6 +13,8 @@ import { BLOGS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { updateBlog } from "../../utils/blogs/update-blog";
+import { runDB } from "../../../src/db/mongo.db"
+import { SETTINGS } from "../../../src/core/settings/settings";
 
 describe('Blogs API', () => {
   const app = express();
@@ -21,6 +23,7 @@ describe('Blogs API', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
+    await runDB(SETTINGS.MONGO_URL);
     await clearDb(app);
   });
 
@@ -71,9 +74,12 @@ describe('Blogs API', () => {
     const blogResponse = await getBlogById(app, createdBlog.id);
 
     expect(blogResponse).toEqual({
-      ...blogUpdateData,
       id: createdBlog.id,
-      name: expect.any(String),
+      name: blogUpdateData.name,
+      description: blogUpdateData.description,
+      websiteUrl: blogUpdateData.websiteUrl,
+      isMembership: false,
+      createdAt: expect.any(String),
     });
     
   })

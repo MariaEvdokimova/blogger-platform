@@ -220,4 +220,10 @@ components:
           type: string
         websiteUrl:	
           type: string
+        createdAt:
+          type: string
+          format: date-time
+        isMembership:
+          type:	boolean
+          description: True if user has not expired membership subscription to blog
   

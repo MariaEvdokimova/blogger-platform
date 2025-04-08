@@ -1,44 +1,55 @@
-import { db } from "../../db/in-memory.db"
+import { ObjectId, WithId } from "mongodb";
 import { PostInputDto } from "../dto/post.input-dto";
 import { Post } from "../types/post"
+import { postCollection } from "../../db/mongo.db";
 
 export const postRepository = {
-  findAll(): Post[] {
-    return db.posts;
+  async findAll(): Promise<WithId<Post>[]> {
+    return postCollection.find().toArray();
   },
 
-  findById( id: string ): Post | null {
-    return db.posts.find( post => post.id === id) ?? null;
+  async findById( id: string ): Promise<WithId<Post> | null> {
+    return postCollection.findOne({ _id: new ObjectId(id) });
   },
   
-  create( newPost: Post ): Post {
-    db.posts.push( newPost );
-    return newPost;
+  async create( newPost: Post ): Promise<WithId<Post>> {
+    const insertedPost = await postCollection.insertOne( newPost );
+    return {...newPost, _id: insertedPost.insertedId};
   },
   
-  update( id: string, dto: PostInputDto ) {
-    const post = db.posts.find( post => post.id === id);
+  async update( id: string, dto: PostInputDto ) {
+    const updatedResult = await postCollection.updateOne(
+      {
+        _id: new ObjectId(id)
+      },
+      {
+        $set: { 
+          title: dto.title,
+          shortDescription: dto.shortDescription,
+          content: dto.content,
+          blogId: new ObjectId(dto.blogId),
+        }
+      }
+    );
 
-    if ( !post ) {
+    if ( updatedResult.matchedCount < 1 ) {
       throw new Error('Post not exist');
-    }
-
-    post.title = dto.title;
-    post.shortDescription = dto.shortDescription;
-    post.content = dto.content;
-    post.blogId = dto.blogId;
+    }   
     
     return;
   },
   
-  delete( id: string ) {
-    const index = db.posts.findIndex( post => post.id === id );
+  async delete( id: string ) {
+    const deletedResult = await postCollection.deleteOne(
+      {
+        _id: new ObjectId(id)
+      }
+    );
 
-    if (index === -1) {
+    if ( deletedResult.deletedCount < 1) {
       throw new Error('Post not exist');
     }
 
-    db.posts.splice( index, 1 );    
     return;
   },
 }
