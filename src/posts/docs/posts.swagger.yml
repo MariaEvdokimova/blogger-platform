@@ -228,3 +228,6 @@ components:
           type: string
         blogName:
           type: string
+        createdAt:
+          type: string
+          format: date-time
