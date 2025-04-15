@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { blogsRepository } from "../../repositories/blogs.repository";
 import { BlogInputDto } from "../../dto/blog.input-dto";
 import { createErrorMessages } from "../../../core/utils/error.utils";
+import { blogsService } from "../../application/blogs.service";
+import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
 
 export const updateBlogHandler = async (
   req: Request<{id: string}, {}, BlogInputDto>, 
@@ -10,7 +11,7 @@ export const updateBlogHandler = async (
 ) => {
   try {
     const id = req.params.id;
-    const blog = await blogsRepository.findById(id);
+    const blog = await blogsQueryRepository.findById(id);
 
     if (!blog) {
       res
@@ -21,7 +22,7 @@ export const updateBlogHandler = async (
       return;
     }
     
-    await blogsRepository.update(id, req.body);
+    await blogsService.update(id, req.body);
     res.status(HttpStatus.NoContent).send();
     
   } catch (e: unknown) {

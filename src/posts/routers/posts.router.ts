@@ -8,11 +8,16 @@ import { getPostListHandler } from "./handlers/get-post-list.handler";
 import { createPostHandler } from "./handlers/create-post.handler";
 import { updatePostHandler } from "./handlers/update-post.handler";
 import { deletePostHandler } from "./handlers/delete-post.handler";
+import { paginationAndSortingValidation } from "../../core/middlewares/validation/query-pagination-sorting.validation-middlewares";
+import { PostSortField } from "../types/sort";
 
 export const postsRoute = Router({});
 
 postsRoute
-  .get('', getPostListHandler)
+  .get('',
+    paginationAndSortingValidation( PostSortField ), 
+    getPostListHandler
+  )
 
   .get(
     '/:id', 

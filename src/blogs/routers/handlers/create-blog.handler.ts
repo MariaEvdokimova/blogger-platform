@@ -1,25 +1,19 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { BlogInputDto } from "../../dto/blog.input-dto";
-import { Blog } from "../../types/blog";
-import { blogsRepository } from "../../repositories/blogs.repository";
 import { mapToBlogViewModel } from "../mappers/map-to-blog-view-model.util";
+import { blogsService } from "../../application/blogs.service";
+import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
 
 export const createBlogHandler = async (
   req: Request<{}, {}, BlogInputDto>, 
   res: Response
 ) => {
-  try {
-    const newBlog: Blog = {
-      name: req.body.name,
-      description: req.body.description,
-      websiteUrl: req.body.websiteUrl,
-      createdAt: new Date(),
-      isMembership: false,
-    } 
-
-    const createdBlog = await blogsRepository.create(newBlog);
-    const blogViewModal = mapToBlogViewModel(createdBlog);
+  try {    
+    const createdBlogId = await blogsService.create(req.body);
+    const createdBlog = await blogsQueryRepository.findById(createdBlogId);
+    const blogViewModal = mapToBlogViewModel(createdBlog!);
+    
     res.status(HttpStatus.Created).send(blogViewModal);
     
   } catch (e: unknown) {

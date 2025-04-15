@@ -6,8 +6,6 @@ import express from "express";
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { clearDb } from "../../utils/clear-db";
-import { BlogInputDto } from "../../../src/blogs/dto/blog.input-dto";
-import { getBlogDto } from "../../utils/blogs/get-blog-dto";
 import { POSTS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { runDB, stopDb } from "../../../src/db/mongo.db";
@@ -53,6 +51,6 @@ describe('Posts API body validation check', () => {
       .get(POSTS_PATH)
       .set('Authorization', adminToken);
 
-    expect(postListResponse.body).toHaveLength(0);
+    expect(postListResponse.body.items).toEqual([]);
   });
 });

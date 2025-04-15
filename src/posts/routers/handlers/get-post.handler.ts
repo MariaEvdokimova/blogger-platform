@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { postRepository } from "../../repositories/posts.repository";
 import { createErrorMessages } from "../../../core/utils/error.utils";
 import { mapToPostViewModel } from "../../mappers/map-to-post-view-model.util";
+import { postService } from "../../application/post.service";
+import { postsQueryRepository } from "../../repositories/posts.query.repository";
 
 export const getPostHandler = async (
   req: Request<{id: string}>, 
@@ -10,7 +11,7 @@ export const getPostHandler = async (
 ) => {
   try {
     const id = req.params.id;
-    const post = await postRepository.findById(id);
+    const post = await postsQueryRepository.findById(id);
       
     if (!post) {
       res

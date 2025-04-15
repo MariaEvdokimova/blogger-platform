@@ -65,7 +65,7 @@ describe('Blogs API body validation check', () => {
 
     // check empty blogs
     const blogsListResponse = await request(app).get(BLOGS_PATH)
-    expect(blogsListResponse.body).toHaveLength(0);
+    expect(blogsListResponse.body.items).toEqual([]);
     });
 
     it('❌ should not update blog when incorrect body passed; PUT /blogs/:id', async () => {

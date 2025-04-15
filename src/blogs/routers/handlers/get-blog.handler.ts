@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { blogsRepository } from "../../repositories/blogs.repository";
 import { createErrorMessages } from "../../../core/utils/error.utils";
 import { mapToBlogViewModel } from "../mappers/map-to-blog-view-model.util";
+import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
 
 export const getBlogHandler = async (
   req: Request<{id: string},{},{}>, 
@@ -10,7 +10,7 @@ export const getBlogHandler = async (
 ) => {
   try {
     const id = req.params.id;
-    const blog = await blogsRepository.findById(id);
+    const blog = await blogsQueryRepository.findById(id);
     
     if (!blog) {
       res

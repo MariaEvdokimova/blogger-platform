@@ -4,30 +4,22 @@ import { Blog } from "../types/blog";
 import { blogCollection } from "../../db/mongo.db";
 
 export const blogsRepository = {
-  async findAll(): Promise<WithId<Blog>[]> {
-    return blogCollection.find().toArray();
-  },
-
   async findById(id: string): Promise<WithId<Blog> | null> {
     return blogCollection.findOne({ _id: new ObjectId(id)});
   },
 
-  async create( newBlog: Blog): Promise<WithId<Blog>> {
+  async create( newBlog: Blog): Promise<string> {
     const insertResult = await blogCollection.insertOne(newBlog);
-    return { ...newBlog, _id: insertResult.insertedId };
+    return insertResult.insertedId.toString();
   }, 
 
-  async update(id: string, dto: BlogInputDto) {
+  async update(id: string, newBlog: BlogInputDto) {
     const updateResult = await blogCollection.updateOne(
       {
         _id: new ObjectId(id)
       },
       {
-        $set: {
-          name: dto.name,
-          description: dto.description,
-          websiteUrl: dto.websiteUrl
-        }
+        $set: newBlog
       }
     );
     

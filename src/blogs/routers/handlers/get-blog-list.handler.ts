@@ -1,13 +1,25 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { blogsRepository } from "../../repositories/blogs.repository";
-import { mapToBlogViewModel } from "../mappers/map-to-blog-view-model.util";
+import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
+import { setDefaultSortAandPagination } from "../../../core/helpers/set-default-sort-and-pagination";
 
 export const getBlogListHandler = async (req: Request, res: Response) => {
   try {
-    const blogs = await blogsRepository.findAll();
-    const blogViewModels = blogs.map(mapToBlogViewModel);
-    res.status(HttpStatus.Ok).send(blogViewModels);
+    const { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm} = setDefaultSortAandPagination( req );    
+
+    const blogs = await blogsQueryRepository.getBlogs( { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm} );
+    const blogsCount = await blogsQueryRepository.getBlogsCount( searchNameTerm );
+    const blogListOutput = await blogsQueryRepository.mapPaginationViewMdel(
+      { 
+        blogs,
+        pageSize, 
+        pageNumber, 
+        blogsCount 
+      }
+    );
+
+    res.status(HttpStatus.Ok).send(blogListOutput);
+
   } catch (e: unknown) {
     res.sendStatus(HttpStatus.InternalServerError);
   }
