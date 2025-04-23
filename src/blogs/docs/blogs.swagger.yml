@@ -1,21 +1,67 @@
 paths:
   /blogs:
     get:
-      summary: Returns all blogs
+      summary: Returns blogs with paging
       tags: [ Blogs ]
+      parameters:
+        - name: searchNameTerm
+          in: query
+          description: 'Search term for blog Name: Name should contains this term in any position'
+          required: false
+          schema:
+            type: string
+            default: null
+
+        - name: sortBy
+          in: query
+          description: Field to sort by.
+          required: false
+          schema:
+            type: string
+            default: createdAt
+
+        - name: sortDirection
+          in: query
+          description: 'Default value: desc'
+          required: false
+          schema:
+            $ref: '#/components/schemas/h04.SortDirections'
+            default: desc
+
+        - name: pageNumber
+          in: query
+          description: >
+            Page number — the number of portions that should be returned.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+
+        - name: pageSize
+          in: query
+          description: >
+            Page size — the portion size that should be returned.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+
       responses:
         200:
           description: Success
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
+
     post:
       summary: Create new blog
       tags: [ Blogs ]
@@ -39,13 +85,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
         400:
           description: If the inputModel has incorrect values
           content:
@@ -60,6 +106,127 @@ paths:
                 $ref: '#/components/schemas/APIErrorResult'
         401: 
           description: Unauthorized
+
+  /blogs/{blogId}/posts:
+    get:
+      summary: Returns all posts for specified blog
+      tags: [ Blogs ]
+      parameters:
+        - name: pageNumber
+          in: query
+          required: false
+          description: pageNumber is number of portions that should be returned
+          schema:
+            type: integer
+            format: int32
+            default: 1
+
+        - name: pageSize
+          in: query
+          required: false
+          description: pageSize is portions size that should be returned
+          schema:
+            type: integer
+            format: int32
+            default: 10
+
+        - name: sortBy
+          in: query
+          required: false
+          description: 'Default value : createdAt'
+          schema:
+            type: string
+            default: createdAt
+
+        - name: sortDirection
+          in: query
+          required: false
+          description: 'Default value: desc'
+          schema:
+            $ref: '#/components/schemas/h04.SortDirections'
+            default: desc
+
+        - name: blogId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      responses:
+        '200':
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+
+        '404':
+          description: If specificied blog is not exists
+
+    post:
+      summary: Create new post for specific blog
+      tags: [ Blogs ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: blogId
+          in: path
+          required: true
+          schema:
+            type: string
+
+      requestBody:
+        description: Data for constructing new post entity
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogPostInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogPostInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/h02.db.BlogPostInputModel'
+
+      responses:
+        '201':
+          description: Returns the newly created post
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/h03.PostViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/h03.PostViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/h03.PostViewModel'
+
+        '400':
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+
+        '401':
+          description: Unauthorized
+
+        '404':
+          description: If specified blog doesn't exists
+
   /blogs/{id}:
     get:
       summary: Returns blog by id
@@ -77,13 +244,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.BlogViewModel'
+                $ref: '#/components/schemas/h03.BlogViewModel'
         404:
           description: "Not Found"
     put:
@@ -186,6 +353,50 @@ components:
           nullable: true
           description: "What field/property of input model has error"
     
+    Paginator<h03.BlogViewModel>:
+      type: object
+      required:
+        - items
+      properties:
+        pagesCount:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/h03.BlogViewModel'
+
+    Paginator<h03.PostViewModel>:
+      type: object
+      required:
+        - items
+      properties:
+        pagesCount:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/h03.PostViewModel'
+
     h02.db.BlogInputModel:
       type: object
       required:
@@ -204,7 +415,24 @@ components:
           maxLength: 100
           pattern: ^https://([a-zA-Z0-9_-]+\.)+[a-zA-Z0-9_-]+(\/[a-zA-Z0-9_-]+)*\/?$
 
-    h02.db.BlogViewModel:
+    h02.db.BlogPostInputModel:
+      type: object
+      required:
+        - title
+        - shortDescription
+        - content
+      properties:
+        title:
+          type:	string
+          maxLength: 30
+        shortDescription:
+          type: string
+          maxLength: 100
+        content:	
+          type: string
+          maxLength: 1000
+
+    h03.BlogViewModel:
       type: object
       required:
         - id
@@ -227,3 +455,8 @@ components:
           type:	boolean
           description: True if user has not expired membership subscription to blog
   
+    h04.SortDirections:
+      type: string
+      enum:
+        - asc
+        - desc

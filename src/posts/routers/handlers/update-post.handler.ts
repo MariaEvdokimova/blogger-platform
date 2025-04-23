@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { postRepository } from "../../repositories/posts.repository";
 import { createErrorMessages } from "../../../core/utils/error.utils";
 import { PostInputDto } from "../../dto/post.input-dto";
+import { postService } from "../../application/post.service";
+import { postsQueryRepository } from "../../repositories/posts.query.repository";
 
 export const updatePostHandler = async (
   req: Request<{id: string}, {}, PostInputDto>, 
@@ -10,7 +11,7 @@ export const updatePostHandler = async (
 ) => {
   try {
     const id = req.params.id;
-    const post = await postRepository.findById(id);
+    const post = await postsQueryRepository.findById(id);
 
     if( !post ) {
       res
@@ -21,7 +22,7 @@ export const updatePostHandler = async (
       return;
     }
     
-    await postRepository.update(id, req.body);
+    await postService.update(id, req.body);
     res.status(HttpStatus.NoContent).send();
 
   } catch (e: unknown) {

@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { postRepository } from "../../repositories/posts.repository";
 import { createErrorMessages } from "../../../core/utils/error.utils";
+import { postService } from "../../application/post.service";
+import { postsQueryRepository } from "../../repositories/posts.query.repository";
 
 export const deletePostHandler = async (
   req: Request<{id: string}>, 
@@ -9,7 +10,7 @@ export const deletePostHandler = async (
 ) => {
   try {
     const id = req.params.id;
-    const post = await postRepository.findById(id);
+    const post = await postsQueryRepository.findById(id);
     
     if (!post) {
       res
@@ -20,7 +21,7 @@ export const deletePostHandler = async (
       return;
     }
 
-    await postRepository.delete(id);
+    await postService.delete(id);
     res.status(HttpStatus.NoContent).send();
 
   } catch ( e: unknown ) {

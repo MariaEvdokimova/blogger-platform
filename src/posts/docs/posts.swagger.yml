@@ -3,19 +3,56 @@ paths:
     get:
       summary: Returns all posts
       tags: [ Posts ]
+      parameters:
+        - name: sortBy
+          in: query
+          description: Field to sort by.
+          required: false
+          schema:
+            type: string
+            default: createdAt
+
+        - name: sortDirection
+          in: query
+          description: 'Default value: desc'
+          required: false
+          schema:
+            $ref: '#/components/schemas/h04.SortDirections'
+            default: desc
+
+        - name: pageNumber
+          in: query
+          description: >
+            Page number — the number of portions that should be returned.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+
+        - name: pageSize
+          in: query
+          description: >
+            Page size — the portion size that should be returned.
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+
       responses:
         200:
           description: Success
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.PostBlogViewModel'
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
     post:
       summary: Create new post
       tags: [ Posts ]
@@ -39,13 +76,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
         400:
           description: If the inputModel has incorrect values
           content:
@@ -77,13 +114,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h02.db.PostViewModel'
+                $ref: '#/components/schemas/h03.PostViewModel'
         404:
           description: "Not Found"
     put:
@@ -206,7 +243,7 @@ components:
         blogId:
           type: string
 
-    h02.db.PostViewModel:
+    h03.PostViewModel:
       type: object
       required:
         - id

@@ -35,8 +35,8 @@ describe('POST API', () => {
       .get(POSTS_PATH)
       .expect(HttpStatus.Ok);
 
-    expect(postListResponse.body).toBeInstanceOf(Array);
-    expect(postListResponse.body).toHaveLength(2);
+    expect(postListResponse.body).toBeInstanceOf(Object);
+    expect(postListResponse.body.items).toHaveLength(2);
   });
   
   it('✅ Should return post by id; GET /posts/:id', async () => {
