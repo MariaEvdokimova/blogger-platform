@@ -3,6 +3,7 @@ import { blogCollection } from "../../db/mongo.db";
 import { Blog } from "../types/blog";
 import { mapToBlogViewModel } from "../routers/mappers/map-to-blog-view-model.util";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 export const blogsQueryRepository = {
   async getBlogs( dto: PaginationQueryParamsDto ): Promise<WithId<Blog>[]> {
@@ -30,7 +31,17 @@ export const blogsQueryRepository = {
   },
   
   async findById(id: string): Promise<WithId<Blog> | null> {
-    return blogCollection.findOne({ _id: new ObjectId(id)});
+    return await blogCollection.findOne({ _id: new ObjectId(id)});    
+  },
+
+  async findByIdOrFail(id: string): Promise<WithId<Blog>> {
+    const blog = await blogCollection.findOne({ _id: new ObjectId(id)});
+    
+    if ( !blog ) {
+      throw new EntityNotFoundError();
+    }
+    
+    return blog;
   },
 
   async mapPaginationViewMdel (

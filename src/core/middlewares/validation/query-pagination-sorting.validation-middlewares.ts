@@ -1,6 +1,5 @@
 import { query } from 'express-validator';
-import { SortDirection } from "../../../blogs/types/sort";
-import { PaginationAndSorting } from '../../types/pagination-and-sorting';
+import { PaginationAndSorting, SortDirection } from '../../types/pagination-and-sorting';
 
 const DEFAULT_PAGE_NUMBER = 1;
 const DEFAULT_PAGE_SIZE = 10;

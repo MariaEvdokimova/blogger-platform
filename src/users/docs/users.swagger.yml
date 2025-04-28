@@ -1,0 +1,246 @@
+paths:
+  /users:
+    get:
+      summary: Returns all users
+      tags: [ Users ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: sortBy
+          in: query
+          description: "Default value : createdAt"
+          required: false
+          schema:
+            type: string
+            default: createdAt
+
+        - name: sortDirection
+          in: query
+          description: >
+            Default value: desc 
+          required: false
+          schema:
+            $ref: '#/components/schemas/SortDirections'
+            default: desc
+
+        - name: pageNumber
+          in: query
+          description: >
+            pageNumber is number of portions that should be returned
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 1
+
+        - name: pageSize
+          in: query
+          description: >
+            pageSize is portions size that should be returned
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 10
+
+        - name: searchLoginTerm
+          in: query
+          description: 'Search term for user Login: Login should contains this term in any position'
+          required: false
+          schema:
+            type: string
+            default: null
+
+        - name: searchEmailTerm
+          in: query
+          description: 'Search term for user Email: Email should contains this term in any position'
+          required: false
+          schema:
+            type: string
+            default: null
+
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/Paginator<UserViewModel>'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Paginator<UserViewModel>'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Paginator<UserViewModel>'
+        401: 
+          description: Unauthorized
+
+    post:
+      summary: Add new user to the system
+      tags: [ Users ]
+      security:
+        - basicAuth: [ ]
+      requestBody:
+        description: Data for constructing new user
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+      responses:
+        201:
+          description: Returns the newly created blog
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/UserViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/UserViewModel'
+        400:
+          description: >
+            If the inputModel has incorrect values.
+
+            Note: If the error should be in the BLL, for example, "the email address is not unique", do not try to mix this error with input validation errors in the middleware, just return one element in the errors array
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+
+  /users/{id}:
+    delete:
+      summary: Delete user specified by id
+      tags: [ Users ]
+      security:
+        - basicAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          description: User id
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: "No Content"
+        401: 
+          description: Unauthorized
+        404:
+          description: "If specified user is not exists"  
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: "Enter JWT Bearer token only"
+    basicAuth:
+      type: http
+      scheme: basic
+      description: "Username and Password"
+    refreshToken:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: "JWT refreshToken inside cookie. Must be correct, and must not expire"
+
+  schemas:
+    APIErrorResult:
+      type: object
+      properties:
+        errorsMessages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+    
+    FieldError:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          description: "Message with error explanation for certain field"
+        field:
+          type: string
+          nullable: true
+          description: "What field/property of input model has error"
+    
+    Paginator<UserViewModel>:
+      type: object
+      required:
+        - items
+      properties:
+        pagesCount:
+          type: integer
+          format: int32
+        page:
+          type: integer
+          format: int32
+        pageSize:
+          type: integer
+          format: int32
+        totalCount:
+          type: integer
+          format: int32
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserViewModel'
+
+    UserInputModel:
+      type: object
+      required:
+        - login
+        - password
+        - email
+      properties:
+        login:
+          type:	string
+          maxLength: 10
+          minLength: 3
+          pattern: ^[a-zA-Z0-9_-]*$
+          unique: true
+        password:
+          type: string
+          maxLength: 20
+          minLength: 6
+        email:
+          type: string
+          pattern: ^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$
+          example: example@example.com
+          unique: true
+
+    UserViewModel:
+      type: object
+      required:
+        - id
+        - login
+        - email
+        - createdAt
+      properties:
+        id:	
+          type: string
+        login:	
+          type: string
+        email:	
+          type: string
+        createdAt:
+          type: string
+          format: date-time

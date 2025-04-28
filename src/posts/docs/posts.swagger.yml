@@ -17,7 +17,7 @@ paths:
           description: 'Default value: desc'
           required: false
           schema:
-            $ref: '#/components/schemas/h04.SortDirections'
+            $ref: '#/components/schemas/SortDirections'
             default: desc
 
         - name: pageNumber

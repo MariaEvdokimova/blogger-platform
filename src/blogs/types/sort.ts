@@ -1,8 +1,3 @@
-export enum SortDirection {
-  Asc = 'asc',
-  Desc = 'desc'
-};
-
 export enum BlogSortField {
   createdAt = 'createdAt',
   id = 'id',

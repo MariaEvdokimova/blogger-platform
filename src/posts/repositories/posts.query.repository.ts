@@ -3,6 +3,7 @@ import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { Post } from "../types/post";
 import { postCollection } from "../../db/mongo.db";
 import { mapToPostViewModel } from "../mappers/map-to-post-view-model.util";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 export const postsQueryRepository = {
   async getPosts( dto: PaginationQueryParamsDto ): Promise<WithId<Post>[]> {
@@ -31,6 +32,16 @@ export const postsQueryRepository = {
   
   async findById(id: string): Promise<WithId<Post> | null> {
     return postCollection.findOne({ _id: new ObjectId(id)});
+  },
+
+  async findByIdOrFail(id: string): Promise<WithId<Post>> {
+    const post = await  postCollection.findOne({ _id: new ObjectId(id)});
+    
+    if ( !post ) {
+      throw new EntityNotFoundError();
+    }
+    
+    return post;
   },
 
   async mapPaginationViewMdel (

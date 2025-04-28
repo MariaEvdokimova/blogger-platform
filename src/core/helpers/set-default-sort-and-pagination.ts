@@ -12,7 +12,5 @@ export const setDefaultSortAandPagination = ( req: Request ) => {
     ? 'asc'
     : 'desc';
   
-  const searchNameTerm = req.query.searchNameTerm?.toString() || null;
-
-  return { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm };
+  return { pageNumber, pageSize, sortBy, sortDirection };
 };

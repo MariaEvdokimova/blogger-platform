@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { postsQueryRepository } from "../../repositories/posts.query.repository";
 import { setDefaultSortAandPagination } from "../../../core/helpers/set-default-sort-and-pagination";
+import { errorsHandler } from "../../../core/errors/errors.handler";
 
 export const getPostListHandler = async (req: Request, res: Response) => {
   try {
@@ -14,6 +15,6 @@ export const getPostListHandler = async (req: Request, res: Response) => {
     res.status(HttpStatus.Ok).send(postListOutput);
 
   } catch ( e: unknown ) {
-    res.sendStatus(HttpStatus.InternalServerError);
+    errorsHandler(e, res);
   }
 };

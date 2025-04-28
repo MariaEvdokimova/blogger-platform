@@ -5,6 +5,8 @@ info:
   description: Blogger platform API documentation
 
 tags:
+  - name: Auth
   - name: Blogs
   - name: Posts
   - name: Testing
+  - name: Users
