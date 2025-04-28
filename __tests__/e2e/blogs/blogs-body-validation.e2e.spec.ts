@@ -103,4 +103,19 @@ describe('Blogs API body validation check', () => {
       });
       
     });
+
+    it('❌ should not update blog when incorrect id; PUT /blogs/:id', async () => {
+      const invalidDataSet1 = await request(app)
+      .put(`${BLOGS_PATH}/рпорарпл`)
+      .set('Authorization', adminToken)
+      .send({
+        name: 'hjkjh',
+        description: 'khjhgxfghj',
+        websiteUrl: 'https://S8kLiHwPZQsNgCPhvBBcEa4E747ZdyOHh9mvTxu0wJN.ZeB2c'
+      })
+      .expect(HttpStatus.BadRequest);
+
+      expect(invalidDataSet1.body.errorsMessages).toHaveLength(1);
+            
+    });
 }); 

@@ -1,4 +1,4 @@
-export type blogViewModels = {
+export type BlogViewModels = {
   id: string;
   name:	string;
   description: string;

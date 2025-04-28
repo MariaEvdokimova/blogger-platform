@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { PostInputDto } from "../../dto/post.input-dto";
-import { createErrorMessages } from "../../../core/utils/error.utils";
+import { createErrorMessages } from "../../../core/errors/error.utils";
 import { mapToPostViewModel } from "../../mappers/map-to-post-view-model.util";
-import { postService } from "../../application/post.service";
+import { postService } from "../../domain/post.service";
 import { blogsQueryRepository } from "../../../blogs/repositories/blogs.query.repository";
 import { postsQueryRepository } from "../../repositories/posts.query.repository";
+import { errorsHandler } from "../../../core/errors/errors.handler";
 
 export const createPostHandler = async (
   req: Request<{}, {}, PostInputDto>, 
@@ -31,6 +32,6 @@ export const createPostHandler = async (
     res.status(HttpStatus.Created).send(postViewModel); 
      
   } catch ( e: unknown ) {
-    res.sendStatus(HttpStatus.InternalServerError);
+    errorsHandler(e, res);
   }
 };

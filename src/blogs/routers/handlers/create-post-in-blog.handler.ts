@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 import { PostInBlogInputDto } from "../../dto/post-in-blog.input-dto";
-import { blogsService } from "../../application/blogs.service";
+import { blogsService } from "../../domain/blogs.service";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
-import { createErrorMessages } from "../../../core/utils/error.utils";
+import { createErrorMessages } from "../../../core/errors/error.utils";
 import { mapToPostViewModel } from "../../../posts/mappers/map-to-post-view-model.util";
 import { postsQueryRepository } from "../../../posts/repositories/posts.query.repository";
+import { errorsHandler } from "../../../core/errors/errors.handler";
 
 export const createPostInBlogHandler = async (
   req: Request<{ blogId: string }, {}, PostInBlogInputDto>, 
@@ -13,13 +14,8 @@ export const createPostInBlogHandler = async (
 ) => {
   try {
     const id = req.params.blogId;
-    const blog = await blogsQueryRepository.findById(id);
-        
-    if (!blog) {
-      res.sendStatus(HttpStatus.NotFound);      
-      return;
-    }
- 
+
+    const blog = await blogsQueryRepository.findByIdOrFail(id);
     const createdPostId = await blogsService.createPost(req.body, blog);
     const createdPost = await postsQueryRepository.findById(createdPostId);
     const postInBlogViewModel = mapToPostViewModel( createdPost! );
@@ -27,6 +23,6 @@ export const createPostInBlogHandler = async (
     res.status(HttpStatus.Created).send(postInBlogViewModel);
     
   } catch (e: unknown) {
-    res.sendStatus(HttpStatus.InternalServerError);
+    errorsHandler(e, res);
   }
 };

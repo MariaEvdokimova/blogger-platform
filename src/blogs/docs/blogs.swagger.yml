@@ -25,7 +25,7 @@ paths:
           description: 'Default value: desc'
           required: false
           schema:
-            $ref: '#/components/schemas/h04.SortDirections'
+            $ref: '#/components/schemas/SortDirections'
             default: desc
 
         - name: pageNumber
@@ -54,13 +54,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
+                $ref: '#/components/schemas/Paginator<BlogViewModel>'
             application/json:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
+                $ref: '#/components/schemas/Paginator<BlogViewModel>'
             text/json:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.BlogViewModel>'
+                $ref: '#/components/schemas/Paginator<BlogViewModel>'
 
     post:
       summary: Create new blog
@@ -72,26 +72,26 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
           text/json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
       responses:
         201:
           description: Returns the newly created blog
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
         400:
           description: If the inputModel has incorrect values
           content:
@@ -143,7 +143,7 @@ paths:
           required: false
           description: 'Default value: desc'
           schema:
-            $ref: '#/components/schemas/h04.SortDirections'
+            $ref: '#/components/schemas/SortDirections'
             default: desc
 
         - name: blogId
@@ -244,13 +244,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h03.BlogViewModel'
+                $ref: '#/components/schemas/BlogViewModel'
         404:
           description: "Not Found"
     put:
@@ -269,13 +269,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
           text/json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
           application/*+json:
             schema:
-              $ref: '#/components/schemas/h02.db.BlogInputModel'
+              $ref: '#/components/schemas/BlogInputModel'
       responses:
         204:
           description: "No Content"
@@ -353,7 +353,7 @@ components:
           nullable: true
           description: "What field/property of input model has error"
     
-    Paginator<h03.BlogViewModel>:
+    Paginator<BlogViewModel>:
       type: object
       required:
         - items
@@ -373,7 +373,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/h03.BlogViewModel'
+            $ref: '#/components/schemas/BlogViewModel'
 
     Paginator<h03.PostViewModel>:
       type: object
@@ -397,7 +397,7 @@ components:
           items:
             $ref: '#/components/schemas/h03.PostViewModel'
 
-    h02.db.BlogInputModel:
+    BlogInputModel:
       type: object
       required:
         - name
@@ -432,7 +432,7 @@ components:
           type: string
           maxLength: 1000
 
-    h03.BlogViewModel:
+    BlogViewModel:
       type: object
       required:
         - id
@@ -455,7 +455,7 @@ components:
           type:	boolean
           description: True if user has not expired membership subscription to blog
   
-    h04.SortDirections:
+    SortDirections:
       type: string
       enum:
         - asc

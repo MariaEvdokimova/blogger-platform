@@ -5,12 +5,12 @@ import { getBlogDto } from './get-blog-dto';
 import { BLOGS_PATH } from '../../../src/core/paths/paths';
 import { generateBasicAuthToken } from '../generate-admin-auth-token';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
-import { blogViewModels } from '../../../src/blogs/types/blog-view-model';
+import { BlogViewModels } from '../../../src/blogs/types/blog-view-model';
 
 export const createBlog = async (
   app: Express,
   blogDto?: BlogInputDto
-): Promise<blogViewModels> => {
+): Promise<BlogViewModels> => {
   const defaultBlogData: BlogInputDto = getBlogDto();
 
   const testBlogData = { ...defaultBlogData, ...blogDto };

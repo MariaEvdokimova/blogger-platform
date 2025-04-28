@@ -2,8 +2,9 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { BlogInputDto } from "../../dto/blog.input-dto";
 import { mapToBlogViewModel } from "../mappers/map-to-blog-view-model.util";
-import { blogsService } from "../../application/blogs.service";
+import { blogsService } from "../../domain/blogs.service";
 import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
+import { errorsHandler } from "../../../core/errors/errors.handler";
 
 export const createBlogHandler = async (
   req: Request<{}, {}, BlogInputDto>, 
@@ -17,6 +18,6 @@ export const createBlogHandler = async (
     res.status(HttpStatus.Created).send(blogViewModal);
     
   } catch (e: unknown) {
-    res.sendStatus(HttpStatus.InternalServerError);
+    errorsHandler(e, res);
   }
 };

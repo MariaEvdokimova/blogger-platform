@@ -1,0 +1,67 @@
+paths:
+  /auth/login:
+    post:
+      summary: Try login user to the system
+      tags: [ Auth ]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/LoginInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/LoginInputModel'
+      responses:
+        204:
+          description: If Login and Password are correct
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: If the password or login is wrong
+
+components:
+  schemas:
+    APIErrorResult:
+      type: object
+      properties:
+        errorsMessages:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/FieldError'
+    
+    FieldError:
+      type: object
+      properties:
+        message:
+          type: string
+          nullable: true
+          description: "Message with error explanation for certain field"
+        field:
+          type: string
+          nullable: true
+          description: "What field/property of input model has error"
+    
+    LoginInputModel:
+      type: object
+      required:
+        - loginOrEmail
+        - password
+      properties:
+        loginOrEmail:
+          type: string
+        password:
+          type: string

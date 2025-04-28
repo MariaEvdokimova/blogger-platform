@@ -3,16 +3,13 @@ import { HttpStatus } from "../../../core/types/http-statuses";
 import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
 import { postsQueryRepository } from "../../../posts/repositories/posts.query.repository";
 import { setDefaultSortAandPagination } from "../../../core/helpers/set-default-sort-and-pagination";
+import { errorsHandler } from "../../../core/errors/errors.handler";
 
 export const getBlogPostsHandler = async (req: Request, res: Response) => {
   try {
     const id = req.params.blogId;
-    const blog = await blogsQueryRepository.findById(id);
+    const blog = await blogsQueryRepository.findByIdOrFail(id);
 
-    if (!blog) {
-      res.sendStatus(HttpStatus.NotFound);
-      return;
-    }
     const { pageNumber, pageSize, sortBy, sortDirection } = setDefaultSortAandPagination( req ); 
 
     const searchNameTerm = blog._id;
@@ -24,6 +21,6 @@ export const getBlogPostsHandler = async (req: Request, res: Response) => {
     res.status(HttpStatus.Ok).send(postListOutput);
     
   } catch (e: unknown ) {
-    res.sendStatus(HttpStatus.InternalServerError)
+    errorsHandler(e, res);
   }
 };

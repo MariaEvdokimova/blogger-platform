@@ -5,5 +5,7 @@ export type PaginationQueryParamsDto = {
   pageSize: number, 
   sortBy: string, 
   sortDirection: 'asc' | 'desc', 
-  searchNameTerm?: string | ObjectId | null 
+  searchNameTerm?: string | ObjectId | null,
+  searchLoginTerm?: string | ObjectId | null,
+  searchEmailTerm?: string | ObjectId | null, 
 }
