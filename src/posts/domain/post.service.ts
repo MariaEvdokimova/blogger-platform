@@ -10,12 +10,15 @@ export const postService = {
   },
   
   async create( post: PostInputDto, blog: WithId<Blog> ): Promise<string> {
+    const { title, shortDescription, content } = post;
+    const { _id: blogId, name: blogName } = blog;
+
     const newPost: Post = {
-      title: post.title,
-      shortDescription: post.shortDescription,
-      content: post.content,
-      blogId: blog._id,
-      blogName: blog.name,
+      title: title,
+      shortDescription: shortDescription,
+      content: content,
+      blogId: blogId,
+      blogName: blogName,
       createdAt: new Date(),
     } 
 
@@ -23,11 +26,13 @@ export const postService = {
   },
   
   async update( id: string, dto: PostInputDto ): Promise<void> {
+    const { title, shortDescription, content, blogId } = dto;
+
     const newPost = { 
-      title: dto.title,
-      shortDescription: dto.shortDescription,
-      content: dto.content,
-      blogId: dto.blogId,
+      title: title,
+      shortDescription: shortDescription,
+      content: content,
+      blogId: blogId,
     }
     
     await postRepository.update(id, newPost);

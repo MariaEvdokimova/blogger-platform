@@ -11,7 +11,7 @@ import { POSTS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getPostById } from "../../utils/posts/get-post-by-id";
 import { runDB } from "../../../src/db/mongo.db";
-import { SETTINGS } from "../../../src/core/settings/settings";
+import { appConfig } from "../../../src/core/config/config";
 
 describe('POST API', () => {
   const app = express();
@@ -20,7 +20,7 @@ describe('POST API', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
-    await runDB(SETTINGS.MONGO_URL);
+    await runDB(appConfig.MONGO_URL);
     await clearDb(app);
   });
 
@@ -33,7 +33,7 @@ describe('POST API', () => {
 
     const postListResponse = await request(app)
       .get(POSTS_PATH)
-      .expect(HttpStatus.Ok);
+      .expect(HttpStatus.Success);
 
     expect(postListResponse.body).toBeInstanceOf(Object);
     expect(postListResponse.body.items).toHaveLength(2);

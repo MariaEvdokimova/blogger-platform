@@ -7,11 +7,11 @@ import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { clearDb } from "../../utils/clear-db";
 import { runDB } from "../../../src/db/mongo.db"
-import { SETTINGS } from "../../../src/core/settings/settings";
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { USERS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createUser } from "../../utils/users/create-user";
+import { appConfig } from "../../../src/core/config/config";
 
 describe('Users API', () => {
   const app = express();
@@ -20,10 +20,18 @@ describe('Users API', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
-    await runDB(SETTINGS.MONGO_URL);
+    await runDB(appConfig.MONGO_URL);
     await clearDb(app);
   });
 
+  it('shouldn`t create user without authorization; POST /users', async () => {
+    await request(app)
+      .post(USERS_PATH)
+      .send({
+        login: '',
+      })
+      .expect(HttpStatus.Unauthorized);
+  });
   it('✅ Should create user; POST /users', async () => {
     const newUser: UserInputDto = {
       login: "aaaaaa999",
@@ -50,7 +58,7 @@ describe('Users API', () => {
     const response = await request(app)
       .get(USERS_PATH)
       .set('Authorization', generateBasicAuthToken())
-      .expect(HttpStatus.Ok)
+      .expect(HttpStatus.Success)
   
       expect(response.body).toBeInstanceOf(Object);
       expect(response.body.items.length).toBeGreaterThanOrEqual(1);
@@ -73,6 +81,6 @@ describe('Users API', () => {
       await request(app)
         .get(USERS_PATH)
         .set('Authorization', adminToken)
-        .expect(HttpStatus.Ok);
+        .expect(HttpStatus.Success);
     })   
 })

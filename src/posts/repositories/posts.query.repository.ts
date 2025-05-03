@@ -2,8 +2,8 @@ import { ObjectId, WithId } from "mongodb";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { Post } from "../types/post";
 import { postCollection } from "../../db/mongo.db";
-import { mapToPostViewModel } from "../mappers/map-to-post-view-model.util";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { PostViewModel } from "../types/post-view-model";
 
 export const postsQueryRepository = {
   async getPosts( dto: PaginationQueryParamsDto ): Promise<WithId<Post>[]> {
@@ -11,7 +11,7 @@ export const postsQueryRepository = {
 
     const filter: any = {};
       if (searchNameTerm) {
-      filter.blogId = searchNameTerm;
+      filter.blogId = new ObjectId(searchNameTerm);
     }
 
     return postCollection
@@ -25,23 +25,26 @@ export const postsQueryRepository = {
   async getPostsCount( searchNameTerm?: string | ObjectId | null ): Promise<number> {
     const filter: any = {};
     if( searchNameTerm ) {
-      filter.blogId = searchNameTerm;
+      filter.blogId = new ObjectId(searchNameTerm);
     }
     return postCollection.countDocuments( filter );
   },
   
   async findById(id: string): Promise<WithId<Post> | null> {
+    this._checkObjectId(id);
     return postCollection.findOne({ _id: new ObjectId(id)});
   },
 
-  async findByIdOrFail(id: string): Promise<WithId<Post>> {
+  async findByIdOrFail(id: string): Promise<PostViewModel> {
+    this._checkObjectId(id);
+    
     const post = await  postCollection.findOne({ _id: new ObjectId(id)});
     
     if ( !post ) {
       throw new EntityNotFoundError();
     }
     
-    return post;
+    return this._getInView(post);
   },
 
   async mapPaginationViewMdel (
@@ -57,8 +60,28 @@ export const postsQueryRepository = {
       page: dto.pageNumber,
       pageSize: dto.pageSize,
       totalCount: dto.postsCount,
-      items: dto.posts.map(mapToPostViewModel)
+      items: dto.posts.map(this._getInView)
     };
+  },
+
+  _getInView(post: WithId<Post>): PostViewModel {
+    return {
+      id: post._id.toString(),
+      title: post.title,
+      shortDescription: post.shortDescription,
+      content: post.content,
+      blogId: post.blogId.toString(),
+      blogName: post.blogName,
+      createdAt: post.createdAt,
+    };
+  },
+
+  _checkObjectId(id: string): boolean | EntityNotFoundError {
+    const isValidId = ObjectId.isValid(id);
+    if ( !isValidId ) {
+      throw new EntityNotFoundError();
+    }
+    return isValidId;
   },
 };
 

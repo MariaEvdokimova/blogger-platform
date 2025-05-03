@@ -1,20 +1,20 @@
-import bcrypt from 'bcryptjs';
-
 import { UserInputDto } from "../dto/user.input-dto";
 import { usersRepository } from "../repositories/users.repository";
+import { bcryptService } from '../../auth/adapters/bcrypt.service';
 
 export const usersService = {
   async create( user: UserInputDto ): Promise<string> {
+    const { login, email, password } = user;
 
-    await usersRepository.existsFieldValue( 'login', user.login );
-    await usersRepository.existsFieldValue( 'email', user.email );
+    await usersRepository.existsFieldValue( 'login', login );
+    await usersRepository.existsFieldValue( 'email', email );
 
-    const passwordHash = await this._generateHash( user.password );
+    const passwordHash = await bcryptService.generateHash( password );
 
     const newUser = {
-      login: user.login,
+      login: login,
       password: passwordHash,
-      email: user.email,
+      email: email,
       createdAt: new Date(),
     };
 
@@ -24,9 +24,5 @@ export const usersService = {
   async delete ( id: string ): Promise<void> {
     await usersRepository.delete( id );
     return;
-  },
-
-  async _generateHash ( password: string ) {
-    return bcrypt.hash( password, 10);
   },
 }

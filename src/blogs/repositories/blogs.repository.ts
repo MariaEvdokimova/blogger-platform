@@ -2,9 +2,11 @@ import { ObjectId, WithId } from "mongodb";
 import { BlogInputDto } from "../dto/blog.input-dto";
 import { Blog } from "../types/blog";
 import { blogCollection } from "../../db/mongo.db";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 export const blogsRepository = {
   async findById(id: string): Promise<WithId<Blog> | null> {
+    this._checkObjectId(id);
     return blogCollection.findOne({ _id: new ObjectId(id)});
   },
 
@@ -14,6 +16,8 @@ export const blogsRepository = {
   }, 
 
   async update(id: string, newBlog: BlogInputDto) {
+    this._checkObjectId(id);
+
     const updateResult = await blogCollection.updateOne(
       {
         _id: new ObjectId(id)
@@ -24,13 +28,15 @@ export const blogsRepository = {
     );
     
     if (updateResult.matchedCount < 1) {
-      throw new Error('Blog not exist');
+      throw new EntityNotFoundError();
     }
 
     return;
   },
 
   async delete(id: string) {
+    this._checkObjectId(id);
+    
     const deleteResult = await blogCollection.deleteOne(
       {
         _id: new ObjectId(id)
@@ -38,9 +44,17 @@ export const blogsRepository = {
     );
     
     if ( deleteResult.deletedCount < 1 ) {
-      throw new Error('Blog not exist');
+      throw new EntityNotFoundError();
     }
 
     return;
   },
+  
+  _checkObjectId(id: string): boolean | EntityNotFoundError {
+      const isValidId = ObjectId.isValid(id);
+      if ( !isValidId ) {
+        throw new EntityNotFoundError();
+      }
+      return isValidId;
+    },
 }

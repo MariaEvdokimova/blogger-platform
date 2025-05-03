@@ -11,8 +11,7 @@ export const createUserHandler = async (
 ) => {
   try {
     const createdUserId = await usersService.create( req.body );
-    const createdUser = await usersQueryRepository.FindById( createdUserId );
-    const userViewModel = await usersQueryRepository.mapToUserViewModel( createdUser! );
+    const userViewModel = await usersQueryRepository.findById( createdUserId );
 
     res.status(HttpStatus.Created).send(userViewModel);
 

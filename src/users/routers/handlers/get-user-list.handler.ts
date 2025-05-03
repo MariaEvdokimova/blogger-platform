@@ -30,7 +30,7 @@ export const getUserListHandler = async (req: Request, res: Response) => {
           }
         );
     
-    res.status(HttpStatus.Ok).send(userListOutput);
+    res.status(HttpStatus.Success).send(userListOutput);
 
   } catch (e: unknown) {
     errorsHandler(e, res);

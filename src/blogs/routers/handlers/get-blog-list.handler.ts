@@ -20,7 +20,7 @@ export const getBlogListHandler = async (req: Request, res: Response) => {
       }
     );
 
-    res.status(HttpStatus.Ok).send(blogListOutput);
+    res.status(HttpStatus.Success).send(blogListOutput);
 
   } catch (e: unknown) {
     errorsHandler(e, res);
