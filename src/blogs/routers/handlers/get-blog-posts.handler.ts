@@ -12,13 +12,13 @@ export const getBlogPostsHandler = async (req: Request, res: Response) => {
 
     const { pageNumber, pageSize, sortBy, sortDirection } = setDefaultSortAandPagination( req ); 
 
-    const searchNameTerm = blog._id;
+    const searchNameTerm = blog!.id;
 
     const posts = await postsQueryRepository.getPosts({ pageNumber, pageSize, sortBy, sortDirection, searchNameTerm });
     const postsCount = await postsQueryRepository.getPostsCount( searchNameTerm ); 
     const postListOutput = await postsQueryRepository.mapPaginationViewMdel({ posts, pageSize, pageNumber, postsCount });
 
-    res.status(HttpStatus.Ok).send(postListOutput);
+    res.status(HttpStatus.Success).send(postListOutput);
     
   } catch (e: unknown ) {
     errorsHandler(e, res);

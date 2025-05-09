@@ -2,6 +2,7 @@ import { ObjectId, WithId } from "mongodb";
 import { userCollection } from "../../db/mongo.db";
 import { User } from "../types/user";
 import { ValidationError } from "../../core/errors/validation.error";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 export const usersRepository = {
   async existsFieldValue( field: string, value: string ): Promise<void> {
@@ -29,14 +30,24 @@ export const usersRepository = {
   },
 
   async delete ( id: string ): Promise<void> {
+    this._checkObjectId(id);
+    
     const deleteResult = await userCollection.deleteOne({
       _id: new ObjectId(id),
     });
 
     if (deleteResult.deletedCount < 1) {
-      throw new Error('Driver not exist');
+      throw new EntityNotFoundError();
     }
 
     return;
  },
+  
+  _checkObjectId(id: string): boolean | EntityNotFoundError {
+    const isValidId = ObjectId.isValid(id);
+    if ( !isValidId ) {
+      throw new EntityNotFoundError();
+    }
+    return isValidId;
+  },
 }

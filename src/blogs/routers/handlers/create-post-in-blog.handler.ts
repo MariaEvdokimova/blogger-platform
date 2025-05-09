@@ -3,8 +3,6 @@ import { PostInBlogInputDto } from "../../dto/post-in-blog.input-dto";
 import { blogsService } from "../../domain/blogs.service";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { blogsQueryRepository } from "../../repositories/blogs.query.repository";
-import { createErrorMessages } from "../../../core/errors/error.utils";
-import { mapToPostViewModel } from "../../../posts/mappers/map-to-post-view-model.util";
 import { postsQueryRepository } from "../../../posts/repositories/posts.query.repository";
 import { errorsHandler } from "../../../core/errors/errors.handler";
 
@@ -16,11 +14,10 @@ export const createPostInBlogHandler = async (
     const id = req.params.blogId;
 
     const blog = await blogsQueryRepository.findByIdOrFail(id);
-    const createdPostId = await blogsService.createPost(req.body, blog);
-    const createdPost = await postsQueryRepository.findById(createdPostId);
-    const postInBlogViewModel = mapToPostViewModel( createdPost! );
-    
-    res.status(HttpStatus.Created).send(postInBlogViewModel);
+    const createdPostId = await blogsService.createPost(req.body, blog!);
+    const createdPost = await postsQueryRepository.findByIdOrFail(createdPostId);
+  
+    res.status(HttpStatus.Created).send(createdPost);
     
   } catch (e: unknown) {
     errorsHandler(e, res);

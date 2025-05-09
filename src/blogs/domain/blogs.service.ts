@@ -1,10 +1,11 @@
-import { WithId } from "mongodb";
+import { ObjectId, WithId } from "mongodb";
 import { blogsRepository } from "../repositories/blogs.repository";
 import { Blog } from "../types/blog";
 import { BlogInputDto } from "../dto/blog.input-dto";
 import { postRepository } from "../../posts/repositories/posts.repository";
 import { Post } from "../../posts/types/post";
 import { PostInBlogInputDto } from "../dto/post-in-blog.input-dto";
+import { BlogViewModels } from "../types/blog-view-model";
 
 export const blogsService = {
   async findById(id: string): Promise<WithId<Blog> | null> {
@@ -12,10 +13,11 @@ export const blogsService = {
   },
 
   async create( blog: BlogInputDto): Promise<string> {
+    const { name, description, websiteUrl } = blog;
     const newBlog: Blog = {
-          name: blog.name,
-          description: blog.description,
-          websiteUrl: blog.websiteUrl,
+          name: name,
+          description: description,
+          websiteUrl: websiteUrl,
           createdAt: new Date(),
           isMembership: false,
         } 
@@ -23,13 +25,16 @@ export const blogsService = {
     return await blogsRepository.create(newBlog);
   }, 
 
-  async createPost( post: PostInBlogInputDto, blog: WithId<Blog> ): Promise<string> {
+  async createPost( post: PostInBlogInputDto, blog: BlogViewModels ): Promise<string> {
+    const { title, shortDescription, content } = post;
+    const { id: blogId, name: blogName } = blog;
+
     const newPost: Post = {
-      title: post.title,
-      shortDescription: post.shortDescription,
-      content: post.content,
-      blogId: blog._id,
-      blogName: blog.name,
+      title: title,
+      shortDescription: shortDescription,
+      content: content,
+      blogId: new ObjectId(blogId),
+      blogName: blogName,
       createdAt: new Date(),
     };
      
@@ -37,10 +42,12 @@ export const blogsService = {
   },
 
   async update(id: string, dto: BlogInputDto): Promise<void> {
+    const { name, description, websiteUrl } = dto;
+
     const newBlog = {
-      name: dto.name,
-      description: dto.description,
-      websiteUrl: dto.websiteUrl
+      name: name,
+      description: description,
+      websiteUrl: websiteUrl
     }
 
     await blogsRepository.update(id, newBlog);

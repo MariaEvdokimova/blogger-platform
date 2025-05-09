@@ -11,7 +11,7 @@ export const getPostById  = async (
 ): Promise<PostViewModel> => {
   const getResponse = await request(app)
     .get(`${POSTS_PATH}/${postId}`)
-    .expect(HttpStatus.Ok);
+    .expect(HttpStatus.Success);
 
   return getResponse.body;
 }

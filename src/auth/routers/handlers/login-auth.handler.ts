@@ -9,8 +9,8 @@ export const loginAuthHandler = async (
   res: Response
 ) => {
   try {    
-    await authService.checkCredentials( req.body );    
-    res.status(HttpStatus.NoContent).send();
+    const accessToken = await authService.loginUser( req.body );    
+    res.status(HttpStatus.Success).send( accessToken );
     
   } catch (e: unknown) {
     errorsHandler(e, res);

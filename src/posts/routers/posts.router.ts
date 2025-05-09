@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { getPostHandler } from "./handlers/get-post.handler";
-import { idValidation } from "../../core/middlewares/validation/params-id.validation-middleware";
 import { inputValidationResultMiddleware } from "../../core/middlewares/validation/input-validtion-result.middleware";
 import { postInputDtoValidation } from "../validation/post.input-dto.validation-middlewares";
 import { superAdminGuardMiddleware } from "../../auth/middlewares/super-admin.guard-middleware";
@@ -10,20 +9,31 @@ import { updatePostHandler } from "./handlers/update-post.handler";
 import { deletePostHandler } from "./handlers/delete-post.handler";
 import { paginationAndSortingValidation } from "../../core/middlewares/validation/query-pagination-sorting.validation-middlewares";
 import { PostSortField } from "../types/sort";
+import { CommentSortField } from "../../comments/types/sort";
+import { getPostCommentHandler } from "./handlers/get-post-comments.handler";
+import { contentValidation } from "../../comments/validation/comment.input-dto.validation-middlewares";
+import { accessTokenGuard } from "../../auth/routers/guards/access.token.guard";
+import { createPostCommentHandler } from "./handlers/create-post-comment.handler";
 
 export const postsRoute = Router({});
 
 postsRoute
   .get('',
-    paginationAndSortingValidation( PostSortField ), 
+    paginationAndSortingValidation( PostSortField ),   
+    inputValidationResultMiddleware, 
     getPostListHandler
   )
 
   .get(
     '/:id', 
-    idValidation, 
-    inputValidationResultMiddleware, 
     getPostHandler
+  )
+
+  .get(
+    '/:postId/comments',
+    paginationAndSortingValidation( CommentSortField ),   
+    inputValidationResultMiddleware, 
+    getPostCommentHandler
   )
 
   .post(
@@ -34,10 +44,17 @@ postsRoute
     createPostHandler
   )
 
+  .post(
+    '/:postId/comments',
+    accessTokenGuard,
+    contentValidation, 
+    inputValidationResultMiddleware, 
+    createPostCommentHandler
+  )
+
   .put(
     '/:id', 
     superAdminGuardMiddleware,
-    idValidation, 
     postInputDtoValidation,
     inputValidationResultMiddleware, 
     updatePostHandler
@@ -46,7 +63,5 @@ postsRoute
   .delete(
     '/:id', 
     superAdminGuardMiddleware,
-    idValidation, 
-    inputValidationResultMiddleware, 
     deletePostHandler
   )

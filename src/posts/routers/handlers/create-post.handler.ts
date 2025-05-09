@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { PostInputDto } from "../../dto/post.input-dto";
 import { createErrorMessages } from "../../../core/errors/error.utils";
-import { mapToPostViewModel } from "../../mappers/map-to-post-view-model.util";
 import { postService } from "../../domain/post.service";
 import { blogsQueryRepository } from "../../../blogs/repositories/blogs.query.repository";
 import { postsQueryRepository } from "../../repositories/posts.query.repository";
@@ -26,10 +25,9 @@ export const createPostHandler = async (
     }
 
     const createdPostId = await postService.create(req.body, blog);
-    const createdPost = await postsQueryRepository.findById(createdPostId);
-    const postViewModel = mapToPostViewModel(createdPost!);
-    
-    res.status(HttpStatus.Created).send(postViewModel); 
+    const createdPost = await postsQueryRepository.findByIdOrFail(createdPostId);
+      
+    res.status(HttpStatus.Created).send(createdPost); 
      
   } catch ( e: unknown ) {
     errorsHandler(e, res);

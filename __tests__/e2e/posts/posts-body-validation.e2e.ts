@@ -9,7 +9,7 @@ import { clearDb } from "../../utils/clear-db";
 import { POSTS_PATH } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { runDB, stopDb } from "../../../src/db/mongo.db";
-import { SETTINGS } from "../../../src/core/settings/settings";
+import { appConfig } from "../../../src/core/config/config";
 
 
 describe('Posts API body validation check', () => {
@@ -19,7 +19,7 @@ describe('Posts API body validation check', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
-    await runDB(SETTINGS.MONGO_URL);
+    await runDB(appConfig.MONGO_URL);
     await clearDb(app);
   });
 

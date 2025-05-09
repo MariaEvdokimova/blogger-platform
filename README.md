@@ -4,7 +4,7 @@
 - express-validator
 
 ## API Swagger
-/ht_02/api
+/api
 
 This project uses **[pnpm](https://pnpm.io/)** as the package manager.
 

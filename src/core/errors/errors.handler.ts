@@ -4,10 +4,16 @@ import { ValidationError } from './validation.error';
 import { createErrorMessages } from './error.utils';
 import { EntityNotFoundError } from './entity-not-found.error';
 import { UnauthorizedError } from './unauthorized.error';
+import { ForbiddenError } from './forbidden.error';
 
 export const errorsHandler = (error: unknown, res: Response): void => {
    if (error instanceof EntityNotFoundError) {
     res.sendStatus(HttpStatus.NotFound);
+    return;
+  }
+
+  if (error instanceof ForbiddenError) {
+    res.sendStatus(HttpStatus.Forbidden);
     return;
   }
 

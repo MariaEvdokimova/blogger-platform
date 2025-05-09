@@ -12,7 +12,7 @@ export const getPostListHandler = async (req: Request, res: Response) => {
     const postsCount = await postsQueryRepository.getPostsCount(); 
     const postListOutput = await postsQueryRepository.mapPaginationViewMdel({ posts, pageSize, pageNumber, postsCount });
 
-    res.status(HttpStatus.Ok).send(postListOutput);
+    res.status(HttpStatus.Success).send(postListOutput);
 
   } catch ( e: unknown ) {
     errorsHandler(e, res);

@@ -13,7 +13,7 @@ import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createBlog } from "../../utils/blogs/create-blog";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { runDB, stopDb } from "../../../src/db/mongo.db";
-import { SETTINGS } from "../../../src/core/settings/settings";
+import { appConfig } from "../../../src/core/config/config";
 
 
 describe('Blogs API body validation check', () => {
@@ -25,7 +25,7 @@ describe('Blogs API body validation check', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
-    await runDB(SETTINGS.MONGO_URL);
+    await runDB(appConfig.MONGO_URL);
     await clearDb(app);
   });
 
@@ -113,9 +113,6 @@ describe('Blogs API body validation check', () => {
         description: 'khjhgxfghj',
         websiteUrl: 'https://S8kLiHwPZQsNgCPhvBBcEa4E747ZdyOHh9mvTxu0wJN.ZeB2c'
       })
-      .expect(HttpStatus.BadRequest);
-
-      expect(invalidDataSet1.body.errorsMessages).toHaveLength(1);
-            
+      .expect(HttpStatus.NotFound);
     });
 }); 

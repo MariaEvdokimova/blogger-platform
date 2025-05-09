@@ -3,15 +3,19 @@ import { userCollection } from "../../db/mongo.db";
 import { User } from "../types/user";
 import { UserViewModel } from "../types/user-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
-import { mapToUserViewModel } from "../routers/mappers/map-to-user-view-model.util";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 export const usersQueryRepository = {
-  async FindById( id: string ): Promise<WithId<User> | null> {
-    return userCollection.findOne({_id: new ObjectId(id)});
+  async findById( id: string ): Promise<UserViewModel | null> {
+    this._checkObjectId(id);
+    const user = await userCollection.findOne({_id: new ObjectId(id)});
+    
+    return user ? this._mapToUserViewModel( user ) : null;
   },
 
   async findByIdOrFail(id: string): Promise<WithId<User>> {
+    this._checkObjectId(id);
+    
     const user = await userCollection.findOne({ _id: new ObjectId(id)});
     
     if ( !user ) {
@@ -57,7 +61,7 @@ export const usersQueryRepository = {
       return userCollection.countDocuments(filter);
     },
 
-  async mapToUserViewModel(user: WithId<User>): Promise<UserViewModel> {
+   _mapToUserViewModel(user: WithId<User>): UserViewModel {
     return {
       id: user._id.toString(),
       login: user.login,
@@ -79,7 +83,15 @@ export const usersQueryRepository = {
         page: dto.pageNumber,
         pageSize: dto.pageSize,
         totalCount: dto.usersCount,
-        items: dto.users.map(mapToUserViewModel)
+        items: dto.users.map(this._mapToUserViewModel)
       };
     },
+    
+  _checkObjectId(id: string): boolean | EntityNotFoundError {
+    const isValidId = ObjectId.isValid(id);
+    if ( !isValidId ) {
+      throw new EntityNotFoundError();
+    }
+    return isValidId;
+  },
 }

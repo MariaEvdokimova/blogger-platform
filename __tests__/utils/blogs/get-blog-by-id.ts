@@ -10,7 +10,7 @@ export const getBlogById = async (
 ): Promise<BlogViewModels> => {
   const blogResponse = await request(app)
     .get(`${BLOGS_PATH}/${blogId}`)
-    .expect(HttpStatus.Ok);
+    .expect(HttpStatus.Success);
 
   return blogResponse.body;
 }

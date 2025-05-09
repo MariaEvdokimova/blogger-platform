@@ -5,16 +5,19 @@ import { generateBasicAuthToken } from '../generate-admin-auth-token';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { UserInputDto } from '../../../src/users/dto/user.input-dto';
 import { UserViewModel } from '../../../src/users/types/user-view-model';
+import { getUserDto } from './get-user-dto';
 
 export const createUser = async (
   app: Express,
-  userDto: UserInputDto
+  userDto?: UserInputDto
 ): Promise<UserViewModel> => {
 
+  const testUserData = userDto ?? getUserDto({});
+  
   const createdUserResponse = await request(app)
     .post(USERS_PATH)
     .set('Authorization', generateBasicAuthToken())
-    .send(userDto)
+    .send(testUserData)
     .expect(HttpStatus.Created);
 
   return createdUserResponse.body;

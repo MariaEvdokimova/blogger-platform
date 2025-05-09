@@ -158,13 +158,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+                $ref: '#/components/schemas/Paginator<PostViewModel>'
             application/json:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+                $ref: '#/components/schemas/Paginator<PostViewModel>'
             text/json:
               schema:
-                $ref: '#/components/schemas/Paginator<h03.PostViewModel>'
+                $ref: '#/components/schemas/Paginator<PostViewModel>'
 
         '404':
           description: If specificied blog is not exists
@@ -200,13 +200,13 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: '#/components/schemas/h03.PostViewModel'
+                $ref: '#/components/schemas/PostViewModel'
             application/json:
               schema:
-                $ref: '#/components/schemas/h03.PostViewModel'
+                $ref: '#/components/schemas/PostViewModel'
             text/json:
               schema:
-                $ref: '#/components/schemas/h03.PostViewModel'
+                $ref: '#/components/schemas/PostViewModel'
 
         '400':
           description: If the inputModel has incorrect values
@@ -375,7 +375,7 @@ components:
           items:
             $ref: '#/components/schemas/BlogViewModel'
 
-    Paginator<h03.PostViewModel>:
+    Paginator<PostViewModel>:
       type: object
       required:
         - items
@@ -395,7 +395,7 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/h03.PostViewModel'
+            $ref: '#/components/schemas/PostViewModel'
 
     BlogInputModel:
       type: object

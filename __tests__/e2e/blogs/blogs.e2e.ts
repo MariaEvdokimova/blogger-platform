@@ -14,7 +14,7 @@ import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { updateBlog } from "../../utils/blogs/update-blog";
 import { runDB } from "../../../src/db/mongo.db"
-import { SETTINGS } from "../../../src/core/settings/settings";
+import { appConfig } from "../../../src/core/config/config";
 
 describe('Blogs API', () => {
   const app = express();
@@ -23,7 +23,7 @@ describe('Blogs API', () => {
   const adminToken = generateBasicAuthToken();
 
   beforeAll(async () => {
-    await runDB(SETTINGS.MONGO_URL);
+    await runDB(appConfig.MONGO_URL);
     await clearDb(app);
   });
 
@@ -42,7 +42,7 @@ describe('Blogs API', () => {
 
     const response = await request(app)
       .get(BLOGS_PATH)
-      .expect(HttpStatus.Ok)
+      .expect(HttpStatus.Success)
 
     expect(response.body).toBeInstanceOf(Object);
     expect(response.body.items.length).toBeGreaterThanOrEqual(2);
