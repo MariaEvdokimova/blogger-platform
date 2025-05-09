@@ -3,8 +3,7 @@ import { appConfig } from "../../core/config/config";
 
 export const jwtService = {
   async createToken ( userId: string ) : Promise<string> {
-    //@ts-ignore
-    return jwt.sign( { userId }, appConfig.JWT_SECRET, { expiresIn: appConfig.JWT_TIME });
+    return jwt.sign( { userId }, appConfig.JWT_SECRET, { expiresIn: `${appConfig.JWT_TIME}s` });
   },
   
   async verifyToken(token: string): Promise<{ userId: string } | null> {
