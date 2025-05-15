@@ -2,8 +2,8 @@ import { ObjectId, WithId } from "mongodb";
 import { CommentInputDto } from "../dto/comment.input-dto";
 import { commentsRepository } from "../repositories/comments.repository";
 import { Comment } from "../types/comment";
-import { User } from "../../users/types/user";
 import { PostViewModel } from "../../posts/types/post-view-model";
+import { User } from "../../users/entities/user.entity";
 
 export const commentsService = {
   async create( comment: CommentInputDto, post: PostViewModel, user: WithId<User> ): Promise<string> {

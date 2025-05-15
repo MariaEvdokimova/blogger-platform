@@ -1,14 +1,33 @@
 import jwt from "jsonwebtoken";
-import { appConfig } from "../../core/config/config";
+
+type CreateTokenParams = {
+  secret: string;
+  time: number;
+  userId: string;
+};
+
+type verifyTokenParams = {
+  token: string;
+  secret: string;
+};
 
 export const jwtService = {
-  async createToken ( userId: string ) : Promise<string> {
-    return jwt.sign( { userId }, appConfig.JWT_SECRET, { expiresIn: `${appConfig.JWT_TIME}s` });
+  async createToken ({ 
+      secret, 
+      time, 
+      userId 
+    }: CreateTokenParams 
+  ) : Promise<string> {
+    return jwt.sign( { userId }, secret, { expiresIn: `${time}s` });
   },
   
-  async verifyToken(token: string): Promise<{ userId: string } | null> {
+  async verifyToken({ 
+      token, 
+      secret 
+    }: verifyTokenParams
+  ): Promise<{ userId: string } | null> {
     try {
-      return jwt.verify(token, appConfig.JWT_SECRET) as { userId: string };
+      return jwt.verify(token, secret) as { userId: string };
     } catch (error) {
       console.error("Token verify some error");
       return null;

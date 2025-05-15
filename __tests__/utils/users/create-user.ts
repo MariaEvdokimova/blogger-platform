@@ -1,6 +1,6 @@
 import request from 'supertest';
 import { Express } from 'express';
-import { USERS_PATH } from '../../../src/core/paths/paths';
+import { routersPaths } from '../../../src/core/paths/paths';
 import { generateBasicAuthToken } from '../generate-admin-auth-token';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { UserInputDto } from '../../../src/users/dto/user.input-dto';
@@ -15,7 +15,7 @@ export const createUser = async (
   const testUserData = userDto ?? getUserDto({});
   
   const createdUserResponse = await request(app)
-    .post(USERS_PATH)
+    .post(routersPaths.users)
     .set('Authorization', generateBasicAuthToken())
     .send(testUserData)
     .expect(HttpStatus.Created);

@@ -5,13 +5,12 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { clearDb } from "../../utils/clear-db";
-import { runDB } from "../../../src/db/mongo.db"
+import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
-import { USERS_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createUser } from "../../utils/users/create-user";
-import { appConfig } from "../../../src/core/config/config";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 describe('Users API', () => {
   const app = express();
@@ -19,14 +18,26 @@ describe('Users API', () => {
  
   const adminToken = generateBasicAuthToken();
 
-  beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
-  });
+   beforeAll(async () => {
+      const mongoServer = await MongoMemoryServer.create();
+      await runDB(mongoServer.getUri());
+    });
+  
+    beforeEach(async () => {
+      await dropDb();
+    });
+  
+    afterAll(async () => {
+      await stopDb();
+    });
+  
+    afterAll(done => {
+      done();
+    });
 
   it('shouldn`t create user without authorization; POST /users', async () => {
     await request(app)
-      .post(USERS_PATH)
+      .post(routersPaths.users)
       .send({
         login: '',
       })
@@ -40,7 +51,7 @@ describe('Users API', () => {
     }
 
     await request(app)
-      .post(USERS_PATH)
+      .post(routersPaths.users)
       .set('Authorization', generateBasicAuthToken())
       .send(newUser)
       .expect(HttpStatus.Created);
@@ -56,7 +67,7 @@ describe('Users API', () => {
     await createUser(app, newUser);
   
     const response = await request(app)
-      .get(USERS_PATH)
+      .get(routersPaths.users)
       .set('Authorization', generateBasicAuthToken())
       .expect(HttpStatus.Success)
   
@@ -74,12 +85,12 @@ describe('Users API', () => {
       const createdUser = await createUser(app, newUser);
   
       await request(app)
-        .delete(`${USERS_PATH}/${createdUser.id}`)
+        .delete(`${routersPaths.users}/${createdUser.id}`)
         .set('Authorization', adminToken)
         .expect(HttpStatus.NoContent);
   
       await request(app)
-        .get(USERS_PATH)
+        .get(routersPaths.users)
         .set('Authorization', adminToken)
         .expect(HttpStatus.Success);
     })   

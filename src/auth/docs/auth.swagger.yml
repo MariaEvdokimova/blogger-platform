@@ -16,7 +16,7 @@ paths:
               $ref: '#/components/schemas/LoginInputModel'
       responses:
         200:
-          description: Returns JWT-token
+          description: Returns JWT accessToken (expired after 10 seconds) in body and JWT refreshToken in cookie (http-only, secure) (expired after 20 seconds).
           content:
             text/plain:
               schema:
@@ -41,6 +41,137 @@ paths:
                 $ref: '#/components/schemas/APIErrorResult'
         401: 
           description: If the password or login is wrong
+
+  /auth/refresh-token:
+    post:
+      summary: Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing)
+      tags: [ Auth ]
+      security:
+        - refreshToken: [] 
+      responses:
+        200:
+          description: Returns JWT accessToken (expired after 10 seconds) in body and JWT refreshToken in cookie (http-only, secure) (expired after 20 seconds).
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccessViewModel'
+        401: 
+          description: Unauthorized
+
+  /auth/registration-confirmation:
+    post:
+      summary: Confirm registration
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationConfirmationCodeModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationConfirmationCodeModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/RegistrationConfirmationCodeModel'
+      responses:
+        204:
+          description: Email was verified. Account was activated
+        400:
+          description: If the confirmation code is incorrect, expired or already been applied
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+
+  /auth/registration:
+    post:
+      summary: Registration in the system. Email with confirmation code will be send to passed email address
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/UserInputModel'
+      responses:
+        204:
+          description: "Input data is accepted. Email with confirmation code will be send to passed email address. Confirmation code should be inside link as query param, for example: https://some-front.com/confirm-registration?code=youtcodehere"
+        400:
+          description: If the inputModel has incorrect values (in particular if the user with the given email or login already exists)
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+  
+  /auth/registration-email-resending:
+    post:
+      summary: Registration in the system
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationEmailResending'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationEmailResending'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/RegistrationEmailResending'
+      responses:
+        204:
+          description: Email was verified. Account was activated
+        400:
+          description: If the inputModel has incorrect values or if email is already confirmed
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+
+  /auth/logout:
+    post:
+      summary: In cookie client must send correct refreshToken that will be revoked
+      tags: [ Auth ]
+      security:
+        - refreshToken: [] 
+      responses:
+        204:
+          description: No Content
+        401: 
+          description: Unauthorized
+
   /auth/me:
     get:
       summary: Get information about current user
@@ -65,6 +196,12 @@ paths:
           description: Unauthorized
 
 components:
+  securitySchemes:
+    refreshToken:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: "JWT refreshToken inside cookie. Must be correct, and must not expire"
   schemas:
     APIErrorResult:
       type: object
@@ -119,3 +256,24 @@ components:
           type: string
         userId:
           type: string
+      
+    RegistrationConfirmationCodeModel:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          description: Code that be sent via Email inside link
+    
+    RegistrationEmailResending:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          pattern: ^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$
+          example: example@example.com
+          description: Email of already registered but not confirmed user
+    

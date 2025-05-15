@@ -6,11 +6,12 @@ import express from "express";
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { clearDb } from "../../utils/clear-db";
-import { USERS_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
-import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
 import { ObjectId } from "mongodb";
 import { appConfig } from "../../../src/core/config/config";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 
 describe('Users API body validation check', () => {
@@ -19,18 +20,26 @@ describe('Users API body validation check', () => {
  
   const adminToken = generateBasicAuthToken();
 
-  beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
-  });
-
-  afterAll(async () => {
-    await stopDb();
-  });
+   beforeAll(async () => {
+      const mongoServer = await MongoMemoryServer.create();
+      await runDB(mongoServer.getUri());
+    });
+  
+    beforeEach(async () => {
+      await dropDb();
+    });
+  
+    afterAll(async () => {
+      await stopDb();
+    });
+  
+    afterAll(done => {
+      done();
+    });
 
   it('❌ should not create user when incorrect body passed; POST /user', async () => {
     await request(app)
-      .post(USERS_PATH)
+      .post(routersPaths.users)
       .send({
         login: "aaaaaa666",
         password: "string123",
@@ -39,7 +48,7 @@ describe('Users API body validation check', () => {
       .expect(HttpStatus.Unauthorized);
 
       const invalidDataSet1 = await request(app)
-      .post(USERS_PATH)
+      .post(routersPaths.users)
       .set('Authorization', adminToken)
       .send({
         login: "a", //incorrect login
@@ -50,8 +59,8 @@ describe('Users API body validation check', () => {
 
       expect(invalidDataSet1.body.errorsMessages).toHaveLength(2);
       
-      const correctDataSet2 = await request(app)
-      .post(USERS_PATH)
+      await request(app)
+      .post(routersPaths.users)
       .set('Authorization', adminToken)
       .send({
         login: "aaaaaa666",
@@ -61,7 +70,7 @@ describe('Users API body validation check', () => {
       .expect(HttpStatus.Created);
 
       const invalidDataSet2 = await request(app)
-      .post(USERS_PATH)
+      .post(routersPaths.users)
       .set('Authorization', adminToken)
       .send({
         login: "aaaaaa666", //the email address is not unique
@@ -78,7 +87,7 @@ describe('Users API body validation check', () => {
       const nonExistentId = new ObjectId();
 
       const invalidDataSet1 = await request(app)
-      .delete(`${USERS_PATH}/${nonExistentId}`)
+      .delete(`${routersPaths.users}/${nonExistentId}`)
       .set('Authorization', adminToken)
       .expect(HttpStatus.NotFound);
          

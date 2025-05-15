@@ -1,6 +1,19 @@
-export const TESTING_PATH = '/testing';
-export const BLOGS_PATH = '/blogs';
-export const POSTS_PATH = '/posts';
-export const AUTH_PATH = '/auth';
-export const USERS_PATH = '/users';
-export const COMMENTS_PATH = '/comments';
+export const routersPaths = {
+  common: '/',
+  auth: {
+    base: '/auth',
+    login: '/auth/login',
+    logout: '/auth/logout',
+    refreshToken: '/auth/refresh-token',
+    registration: '/auth/registration',
+    me: '/auth/me',
+    registrationConfirmation: '/auth/registration-confirmation',
+    registrationEmailResending: '/auth/registration-email-resending'
+  },
+  blogs: '/blogs',
+  comments: '/comments',
+  posts: '/posts',  
+  testing: '/testing/all-data', 
+  users: '/users',
+}
+

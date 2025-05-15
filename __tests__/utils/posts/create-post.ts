@@ -6,7 +6,7 @@ import { generateBasicAuthToken } from '../generate-admin-auth-token';
 import { PostInputDto } from '../../../src/posts/dto/post.input-dto';
 import { createBlog } from '../blogs/create-blog';
 import { getPostDto } from './get-post-dto';
-import { POSTS_PATH } from '../../../src/core/paths/paths';
+import { routersPaths } from '../../../src/core/paths/paths';
 import { PostViewModel } from '../../../src/posts/types/post-view-model';
 
 export const createPost = async (
@@ -20,7 +20,7 @@ export const createPost = async (
   const testPostData = { ...defaultPostData, ...postDto };
 
   const createdPostResponse = await request(app)
-    .post(POSTS_PATH)
+    .post(routersPaths.posts)
     .set('Authorization', generateBasicAuthToken())
     .send(testPostData)
     .expect(HttpStatus.Created);
