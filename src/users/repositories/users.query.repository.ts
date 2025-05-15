@@ -1,9 +1,9 @@
 import { ObjectId, WithId } from "mongodb";
 import { userCollection } from "../../db/mongo.db";
-import { User } from "../types/user";
 import { UserViewModel } from "../types/user-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { User } from "../entities/user.entity";
 
 export const usersQueryRepository = {
   async findById( id: string ): Promise<UserViewModel | null> {
@@ -68,6 +68,14 @@ export const usersQueryRepository = {
       email: user.email,
       createdAt: user.createdAt,
     };
+  },
+
+  async mapMeViewModel ( user: UserViewModel) {
+    return { 
+      email:	user.email,
+      login:	user.login,
+      userId:	user.id,
+     }
   },
 
   async mapPaginationViewMdel (

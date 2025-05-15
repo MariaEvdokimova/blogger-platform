@@ -1,23 +1,24 @@
 import { UserInputDto } from "../dto/user.input-dto";
 import { usersRepository } from "../repositories/users.repository";
 import { bcryptService } from '../../auth/adapters/bcrypt.service';
+import { ConfirmetionStatus, User } from "../entities/user.entity";
 
 export const usersService = {
   async create( user: UserInputDto ): Promise<string> {
     const { login, email, password } = user;
 
-    await usersRepository.existsFieldValue( 'login', login );
-    await usersRepository.existsFieldValue( 'email', email );
+    await usersRepository.doesExistByLoginOrEmail( login, email );
 
     const passwordHash = await bcryptService.generateHash( password );
 
-    const newUser = {
-      login: login,
-      password: passwordHash,
-      email: email,
-      createdAt: new Date(),
-    };
-
+    const newUser = new User( 
+      login, 
+      email, 
+      passwordHash,
+      {
+        confirmationCode: '',
+        isConfirmed: ConfirmetionStatus.confirmed,
+      });
     return await usersRepository.create( newUser );
   },
 

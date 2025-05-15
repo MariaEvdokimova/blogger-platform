@@ -4,7 +4,7 @@ import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { generateBasicAuthToken } from '../generate-admin-auth-token';
 import { BlogInputDto } from '../../../src/blogs/dto/blog.input-dto';
 import { getBlogDto } from './get-blog-dto';
-import { BLOGS_PATH } from '../../../src/core/paths/paths';
+import { routersPaths } from '../../../src/core/paths/paths';
 
 export const updateBlog = async (
   app: Express,
@@ -16,7 +16,7 @@ export const updateBlog = async (
   const testBlogData = { ...defaulBlogData, ...blogDto };
 
   const updatedBlogResponse = await request(app)
-    .put(`${BLOGS_PATH}/${blogId}`)
+    .put(`${routersPaths.blogs}/${blogId}`)
     .set('Authorization', generateBasicAuthToken())
     .send(testBlogData)
     .expect(HttpStatus.NoContent);

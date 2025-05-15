@@ -8,4 +8,8 @@ export const appConfig = {
   DB_NAME: process.env.DB_NAME || 'test',
   JWT_SECRET: process.env.JWT_SECRET as string,
   JWT_TIME: +process.env.JWT_TIME! as number,
+  R_JWT_SECRET: process.env.R_JWT_SECRET as string,
+  R_JWT_TIME: +process.env.R_JWT_TIME! as number,
+  EMAIL: process.env.EMAIL as string,
+  EMAIL_PASS: process.env.EMAIL_PASS as string,
 }

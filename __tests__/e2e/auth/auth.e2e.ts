@@ -4,21 +4,33 @@ import request from "supertest";
 import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
-import { clearDb } from "../../utils/clear-db";
-import { runDB } from "../../../src/db/mongo.db"
+import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
-import { AUTH_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createUser } from "../../utils/users/create-user";
-import { appConfig } from "../../../src/core/config/config";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 describe('Auth API', () => {
   const app = express();
   setupApp(app);
- 
+
   beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
+    const mongoServer = await MongoMemoryServer.create();
+    await runDB(mongoServer.getUri());
+  });
+
+  beforeEach(async () => {
+    await dropDb();
+  });
+
+  afterAll(async () => {
+    await dropDb();
+    await stopDb();
+  });
+
+  afterAll(done => {
+    done();
   });
 
   it('✅ Should login; POST /auth/login', async () => {
@@ -31,7 +43,7 @@ describe('Auth API', () => {
     await createUser(app, newUser);
   
     await request(app)
-      .post(`${AUTH_PATH}/login`)
+      .post(routersPaths.auth.login)
       .send({
         loginOrEmail: "testauth",
         password: "string123"

@@ -2,7 +2,7 @@
 import request from 'supertest';
 import { Express } from 'express';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
-import { POSTS_PATH } from '../../../src/core/paths/paths';
+import { routersPaths } from '../../../src/core/paths/paths';
 import { PostViewModel } from '../../../src/posts/types/post-view-model';
 
 export const getPostById  = async (
@@ -10,7 +10,7 @@ export const getPostById  = async (
   postId: string
 ): Promise<PostViewModel> => {
   const getResponse = await request(app)
-    .get(`${POSTS_PATH}/${postId}`)
+    .get(`${routersPaths.posts}/${postId}`)
     .expect(HttpStatus.Success);
 
   return getResponse.body;

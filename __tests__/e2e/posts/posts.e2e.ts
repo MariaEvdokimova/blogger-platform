@@ -5,17 +5,16 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { clearDb } from "../../utils/clear-db";
 import { createPost } from "../../utils/posts/create-post";
-import { AUTH_PATH, POSTS_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getPostById } from "../../utils/posts/get-post-by-id";
-import { runDB } from "../../../src/db/mongo.db";
-import { appConfig } from "../../../src/core/config/config";
+import { runDB, stopDb } from "../../../src/db/mongo.db";
 import { PostInputDto } from "../../../src/posts/dto/post.input-dto";
 import { createUser } from "../../utils/users/create-user";
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { generateBearerAuthToken } from "../../utils/generate-berare-auth-token";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 describe('POST API', () => {
   const app = express();
@@ -23,10 +22,18 @@ describe('POST API', () => {
  
   const adminToken = generateBasicAuthToken();
 
-  beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
-  });
+   beforeAll(async () => {
+      const mongoServer = await MongoMemoryServer.create();
+      await runDB(mongoServer.getUri());
+    });
+  
+    afterAll(async () => {
+      await stopDb();
+    });
+  
+    afterAll(done => {
+      done();
+    });
 
   it('✅ Should create post; POST /posts', async () => {
     await createPost(app);
@@ -36,7 +43,7 @@ describe('POST API', () => {
     await createPost(app);
 
     const postListResponse = await request(app)
-      .get(POSTS_PATH)
+      .get(routersPaths.posts)
       .expect(HttpStatus.Success);
 
     expect(postListResponse.body).toBeInstanceOf(Object);
@@ -67,7 +74,7 @@ describe('POST API', () => {
     };
 
     await request(app)
-      .put(`${POSTS_PATH}/${createdPost.id}`)
+      .put(`${routersPaths.posts}/${createdPost.id}`)
       .set('Authorization', adminToken)
       .send( postUpdateData )
       .expect(HttpStatus.NoContent);
@@ -89,12 +96,12 @@ describe('POST API', () => {
     const createdPost = await createPost(app);
     
     await request(app)
-      .delete(`${POSTS_PATH}/${createdPost.id}`)
+      .delete(`${routersPaths.posts}/${createdPost.id}`)
       .set('Authorization', adminToken)
       .expect(HttpStatus.NoContent);
 
     await request(app)
-      .get(`${POSTS_PATH}/${createdPost.id}`)
+      .get(`${routersPaths.posts}/${createdPost.id}`)
       .set('Authorization', adminToken)
       .expect(HttpStatus.NotFound);
   })
@@ -124,13 +131,13 @@ describe('POST API', () => {
     };
 
     await request(app)
-      .post(`${POSTS_PATH}/${ createdPost.id }/comments`)
+      .post(`${routersPaths.posts}/${ createdPost.id }/comments`)
       .set('Authorization', token)
       .send(testCommentData)
       .expect(HttpStatus.Created);
 
     const createdCommentResponse = await request(app)
-      .get(`${POSTS_PATH}/${ createdPost.id }/comments`)
+      .get(`${routersPaths.posts}/${ createdPost.id }/comments`)
       .set('Authorization', token)
       .expect(HttpStatus.Success);
 

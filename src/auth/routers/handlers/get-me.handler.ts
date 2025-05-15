@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { errorsHandler } from "../../../core/errors/errors.handler";
 import { HttpStatus } from "../../../core/types/http-statuses";
-import { authService } from "../../domain.ts/auth.service";
 import { usersQueryRepository } from "../../../users/repositories/users.query.repository";
 
 export const getMeHandler = async (
@@ -15,9 +14,15 @@ export const getMeHandler = async (
       res.sendStatus(HttpStatus.Unauthorized);
       return;
     }
-    const me = await usersQueryRepository.findById(userId);
+    const user = await usersQueryRepository.findById(userId);
+    if (!user) {
+      res.sendStatus(HttpStatus.Unauthorized);
+      return;
+    }
 
-    res.status(HttpStatus.Success).send(me);
+    const meViewModel = await usersQueryRepository.mapMeViewModel( user );
+
+    res.status(HttpStatus.Success).send( meViewModel );
  
   } catch (e: unknown) {
     errorsHandler(e, res);

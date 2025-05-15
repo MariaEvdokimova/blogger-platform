@@ -8,12 +8,13 @@ import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { clearDb } from "../../utils/clear-db";
 import { BlogInputDto } from "../../../src/blogs/dto/blog.input-dto";
 import { getBlogDto } from "../../utils/blogs/get-blog-dto";
-import { BLOGS_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createBlog } from "../../utils/blogs/create-blog";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
-import { runDB, stopDb } from "../../../src/db/mongo.db";
+import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
 import { appConfig } from "../../../src/core/config/config";
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 
 describe('Blogs API body validation check', () => {
@@ -24,23 +25,32 @@ describe('Blogs API body validation check', () => {
  
   const adminToken = generateBasicAuthToken();
 
-  beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
-  });
-
-  afterAll(async () => {
-    await stopDb();
-  });
+   beforeAll(async () => {
+      const mongoServer = await MongoMemoryServer.create();
+      await runDB(mongoServer.getUri());
+    });
+  
+    beforeEach(async () => {
+      await dropDb();
+    });
+  
+    afterAll(async () => {
+      await dropDb();
+      await stopDb();
+    });
+  
+    afterAll(done => {
+      done();
+    });
 
   it('❌ should not create blog when incorrect body passed; POST /blogs', async () => {
     await request(app)
-      .post(BLOGS_PATH)
+      .post(routersPaths.blogs)
       .send(correctTestBlogsData)
       .expect(HttpStatus.Unauthorized);
 
       const invalidDataSet1 = await request(app)
-      .post(BLOGS_PATH)
+      .post(routersPaths.blogs)
       .set('Authorization', adminToken)
       .send({
         name: '         ',// empty string
@@ -52,7 +62,7 @@ describe('Blogs API body validation check', () => {
       expect(invalidDataSet1.body.errorsMessages).toHaveLength(3);
       
       const invalidDataSet2 = await request(app)
-      .post(BLOGS_PATH)
+      .post(routersPaths.blogs)
       .set('Authorization', adminToken)
       .send({
         name: 33,// not a string
@@ -64,7 +74,7 @@ describe('Blogs API body validation check', () => {
       expect(invalidDataSet2.body.errorsMessages).toHaveLength(3);
 
     // check empty blogs
-    const blogsListResponse = await request(app).get(BLOGS_PATH)
+    const blogsListResponse = await request(app).get(routersPaths.blogs)
     expect(blogsListResponse.body.items).toEqual([]);
     });
 
@@ -72,7 +82,7 @@ describe('Blogs API body validation check', () => {
       const createdBlog = await createBlog(app, correctTestBlogsData);
 
       const invalidDataSet1 = await request(app)
-      .put(`${BLOGS_PATH}/${createdBlog.id}`)
+      .put(`${routersPaths.blogs}/${createdBlog.id}`)
       .set('Authorization', adminToken)
       .send({
         name: 33,// not a string
@@ -84,7 +94,7 @@ describe('Blogs API body validation check', () => {
       expect(invalidDataSet1.body.errorsMessages).toHaveLength(3);
       
       const invalidDataSet2 = await request(app)
-      .put(`${BLOGS_PATH}/${createdBlog.id}`)
+      .put(`${routersPaths.blogs}/${createdBlog.id}`)
       .set('Authorization', adminToken)
       .send({
         name: '     ',// not a string
@@ -105,8 +115,8 @@ describe('Blogs API body validation check', () => {
     });
 
     it('❌ should not update blog when incorrect id; PUT /blogs/:id', async () => {
-      const invalidDataSet1 = await request(app)
-      .put(`${BLOGS_PATH}/рпорарпл`)
+      await request(app)
+      .put(`${routersPaths.blogs}/рпорарпл`)
       .set('Authorization', adminToken)
       .send({
         name: 'hjkjh',

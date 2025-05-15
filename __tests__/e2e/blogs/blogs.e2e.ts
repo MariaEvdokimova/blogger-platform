@@ -5,16 +5,15 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { clearDb } from "../../utils/clear-db";
 import { BlogInputDto } from "../../../src/blogs/dto/blog.input-dto";
 import { getBlogDto } from "../../utils/blogs/get-blog-dto";
 import { createBlog } from "../../utils/blogs/create-blog";
-import { BLOGS_PATH } from "../../../src/core/paths/paths";
+import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { updateBlog } from "../../utils/blogs/update-blog";
-import { runDB } from "../../../src/db/mongo.db"
-import { appConfig } from "../../../src/core/config/config";
+import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
+import { MongoMemoryServer } from "mongodb-memory-server";
 
 describe('Blogs API', () => {
   const app = express();
@@ -22,10 +21,23 @@ describe('Blogs API', () => {
  
   const adminToken = generateBasicAuthToken();
 
-  beforeAll(async () => {
-    await runDB(appConfig.MONGO_URL);
-    await clearDb(app);
-  });
+   beforeAll(async () => {
+      const mongoServer = await MongoMemoryServer.create();
+      await runDB(mongoServer.getUri());
+    });
+  
+    beforeEach(async () => {
+      await dropDb();
+    });
+  
+    afterAll(async () => {
+      await dropDb();
+      await stopDb();
+    });
+  
+    afterAll(done => {
+      done();
+    });
 
   it('✅ Should create blog; POST /blogs', async () => {
     const newBlog: BlogInputDto = {
@@ -41,7 +53,7 @@ describe('Blogs API', () => {
     await createBlog(app);
 
     const response = await request(app)
-      .get(BLOGS_PATH)
+      .get(routersPaths.blogs)
       .expect(HttpStatus.Success)
 
     expect(response.body).toBeInstanceOf(Object);
@@ -87,12 +99,12 @@ describe('Blogs API', () => {
     const createdBlog = await createBlog(app);
 
     await request(app)
-      .delete(`${BLOGS_PATH}/${createdBlog.id}`)
+      .delete(`${routersPaths.blogs}/${createdBlog.id}`)
       .set('Authorization', adminToken)
       .expect(HttpStatus.NoContent);
 
     await request(app)
-      .get(`${BLOGS_PATH}/${createdBlog.id}`)
+      .get(`${routersPaths.blogs}/${createdBlog.id}`)
       .set('Authorization', adminToken)
       .expect(HttpStatus.NotFound);
   })

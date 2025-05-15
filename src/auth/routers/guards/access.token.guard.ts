@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-statuses';
 import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
+import { appConfig } from '../../../core/config/config';
 
 export const accessTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
   if (!req.headers.authorization) {
@@ -15,7 +16,10 @@ export const accessTokenGuard = async (req: Request, res: Response, next: NextFu
     return;
   }
 
-  const payload = await jwtService.verifyToken(token);
+  const payload = await jwtService.verifyToken({
+    token, 
+    secret: appConfig.JWT_SECRET
+  });
 
   if (payload) {
     const { userId } = payload;
