@@ -12,4 +12,7 @@ export const appConfig = {
   R_JWT_TIME: +process.env.R_JWT_TIME! as number,
   EMAIL: process.env.EMAIL as string,
   EMAIL_PASS: process.env.EMAIL_PASS as string,
+  EMAIL_HOST: process.env.EMAIL_HOST as string,
+  EMAIL_PORT: +process.env.EMAIL_PORT! as number,
+  COST_FACTOR: +process.env.COST_FACTOR! as number,
 }
