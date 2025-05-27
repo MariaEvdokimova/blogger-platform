@@ -2,8 +2,8 @@ import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-statuses';
 import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
-import { appConfig } from '../../../core/config/config';
 import { cookieConfig } from '../../../core/types/cookie';
+import { blacklistRepository } from '../../repositories/blacklis.repository';
 
 export const refreshTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
   const refreshToken= req.cookies[cookieConfig.refreshToken.name];
@@ -13,9 +13,14 @@ export const refreshTokenGuard = async (req: Request, res: Response, next: NextF
      return;
   }
 
-  const payload = await jwtService.verifyToken({
-    token: refreshToken, 
-    secret: appConfig.R_JWT_SECRET
+  const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshToken );
+  if ( isTokenInBlackList ) {
+    res.sendStatus(HttpStatus.Unauthorized);
+    return;
+  }
+  
+  const payload = await jwtService.verifyRefresToken({
+    token: refreshToken
   });
 
   if (payload) {

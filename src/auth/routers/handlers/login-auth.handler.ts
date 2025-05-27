@@ -4,7 +4,7 @@ import { errorsHandler } from "../../../core/errors/errors.handler";
 import { HttpStatus } from "../../../core/types/http-statuses";
 import { authService } from "../../domain/auth.service";
 import { cookieConfig } from "../../../core/types/cookie";
-import { routersPaths } from "../../../core/paths/paths";
+import { cookieService } from "../../adapters/cookie.service";
 
 export const loginAuthHandler = async (
   req: Request<{}, {}, LoginInputDto>, 
@@ -14,12 +14,7 @@ export const loginAuthHandler = async (
     const refreshToken= req.cookies[cookieConfig.refreshToken.name];
     const tokens = await authService.loginUser( req.body, refreshToken );
    
-    res.cookie(cookieConfig.refreshToken.name, tokens.refreshToken, {
-      httpOnly: cookieConfig.refreshToken.httpOnly, 
-      secure: cookieConfig.refreshToken.secure,
-      path: routersPaths.auth.base,
-      maxAge: cookieConfig.refreshToken.maxAge
-    })    
+    cookieService.createRefreshTokenCookie( res, tokens.refreshToken );  
     res.status(HttpStatus.Success).send({ accessToken: tokens.accessToken });
     
   } catch (e: unknown) {

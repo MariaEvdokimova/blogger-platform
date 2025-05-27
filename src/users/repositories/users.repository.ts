@@ -14,7 +14,7 @@ export const usersRepository = {
       $or: [{ email }, { login }],
     });
     
-    if ( !!user ) {
+    if ( user ) {
       if ( user.email === email ) {
         throw new ValidationError( `The email is not unique`, 'email' );
       } else {  

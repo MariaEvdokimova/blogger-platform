@@ -12,11 +12,11 @@ import { RegistrationConfirmationInputDto } from "../dto/registration-confirmati
 import { ValidationError } from "../../core/errors/validation.error";
 import { RegistrationEmailResendingInputDto } from "../dto/registration-email-resending.input-dto";
 import { add } from "date-fns/add";
-import { randomUUID } from "crypto";
 import { Result } from "../../core/result/result.type";
 import { ResultStatus } from "../../core/result/resultCode";
-import { appConfig } from "../../core/config/config";
-import { blacklistRepository } from "../repositories/auth.repository";
+import { blacklistRepository } from "../repositories/blacklis.repository";
+import { IdType } from "../../core/types/id";
+import { uuidService } from "../../users/adapters/uuid.service";
 
 export const authService = {
   async loginUser ( dto: LoginInputDto, refreshTokenOld: string ): Promise<{ accessToken: string, refreshToken: string }> {
@@ -37,14 +37,9 @@ export const authService = {
   },
 
   async refreshToken ( refreshTokenOld: string, userId: string): Promise<{ accessToken: string, refreshToken: string }> {
-    const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshTokenOld );
-    if ( isTokenInBlackList ) {
-      throw new UnauthorizedError();
-    }
-
     await blacklistRepository.addToBlacklist( refreshTokenOld );
     const tokens = await this._createPairsOfTokens( userId );
-
+    
     return tokens;
   },
 
@@ -105,7 +100,7 @@ export const authService = {
       hours: 1,
       minutes: 3
     });
-    const newConfirmationCode = randomUUID();
+    const newConfirmationCode = uuidService.generate();
 
     const resultUpdate = await usersRepository.updateConfirmation( user._id, newExpirationDate, newConfirmationCode);
 
@@ -132,13 +127,40 @@ export const authService = {
   },
 
   async logoutUser( refreshTokenOld: string ): Promise<void> {
-    const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshTokenOld );
-    if ( isTokenInBlackList ) {
-      throw new UnauthorizedError();
-    } else {
-      await blacklistRepository.addToBlacklist( refreshTokenOld );
-    }
+    await blacklistRepository.addToBlacklist( refreshTokenOld );
     return;
+  },
+
+  async checkAccessToken (authHeader: string): Promise<Result<IdType | null>> {
+    const [type, token] = authHeader.split(' ');
+
+     if (type !== 'Bearer') {
+        return {
+        status: ResultStatus.Unauthorized,
+        errorMessage: 'Unauthorized',
+        data: null,
+        extensions: [{ field: null, message: 'Not Bearer type' }],
+      };
+      }
+
+    const result = await jwtService.verifyAcsessToken({ token });
+
+    if (!result) {
+      return {
+        status: ResultStatus.Unauthorized,
+        errorMessage: 'Unauthorized',
+        data: null,
+        extensions: [{ field: null, message: 'Havent payload' }],
+      };
+    }
+
+    return {
+      status: ResultStatus.Success,
+      data: { 
+        id: result.userId
+      },
+      extensions: [],
+    };
   },
 
   async _checkCredentials ( 
@@ -160,17 +182,8 @@ export const authService = {
   },
 
   async _createPairsOfTokens ( userId: string): Promise<{ accessToken: string, refreshToken: string }> {
-    const accessToken =  await jwtService.createToken({ 
-      secret: appConfig.JWT_SECRET, 
-      time: appConfig.JWT_TIME, 
-      userId
-    });
-
-    const refreshToken = await jwtService.createToken({ 
-      secret: appConfig.R_JWT_SECRET, 
-      time: appConfig.R_JWT_TIME,
-      userId
-    });
+    const accessToken =  await jwtService.createAcsessToken({ userId });
+    const refreshToken = await jwtService.createRefreshToken({ userId });
 
     return { accessToken, refreshToken };
   },

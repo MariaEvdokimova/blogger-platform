@@ -1,5 +1,5 @@
-import { randomUUID } from "crypto";
 import { add } from "date-fns/add";
+import { uuidService } from "../adapters/uuid.service";
 
 export enum ConfirmetionStatus {
   confirmed = 'confirmed',
@@ -35,7 +35,7 @@ export class User {
             hours: 1,
             minutes: 3
           }),
-          confirmationCode: emailConfirmation?.confirmationCode ?? randomUUID(),
+          confirmationCode: emailConfirmation?.confirmationCode ?? uuidService.generate(),
           isConfirmed: emailConfirmation?.isConfirmed ?? ConfirmetionStatus.unconfirmed
       }
   }

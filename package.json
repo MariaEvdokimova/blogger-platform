@@ -8,6 +8,7 @@
     "dev": "nodemon --inspect dist/index.js",
     "jest:e2e": "jest --config jest-e2e.json --runInBand --detectOpenHandles",
     "test:integration": "jest --config jest-integration.json --runInBand --detectOpenHandles",
+    "test:unit": "jest --config jest-unit.json",
     "coverage": "jest --coverage",
     "lint": "eslint --fix .",
     "format": "prettier --write ."
