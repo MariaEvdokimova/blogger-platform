@@ -7,7 +7,7 @@ export const cookieService = {
     res.cookie(cookieConfig.refreshToken.name, token, {
       httpOnly: cookieConfig.refreshToken.httpOnly, 
       secure: cookieConfig.refreshToken.secure,
-      path: routersPaths.auth.base,
+      path: routersPaths.common,
       maxAge: cookieConfig.refreshToken.maxAge
     })
   },
@@ -16,7 +16,7 @@ export const cookieService = {
     res.clearCookie(cookieConfig.refreshToken.name, {
       httpOnly: cookieConfig.refreshToken.httpOnly,
       secure: cookieConfig.refreshToken.secure,
-      path: routersPaths.auth.base,
+      path: routersPaths.common,
     });
   }
 }

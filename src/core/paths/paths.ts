@@ -15,5 +15,6 @@ export const routersPaths = {
   posts: '/posts',  
   testing: '/testing/all-data', 
   users: '/users',
+  securityDevives: '/security/devices'
 }
 

@@ -1,0 +1,85 @@
+paths:
+  /security/devices:
+    get:
+      summary: Returns all devices with active sessions for current user
+      tags: [ SecurityDevices ]
+      security:
+        - refreshToken: [] 
+      responses:
+        200:
+          description: Success
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/DeviceViewModel'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceViewModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/DeviceViewModel'
+        401: 
+          description: Unauthorized
+    
+    delete:
+      summary: Terminate all other (exclude current) device's sessions
+      tags: [ SecurityDevices ]
+      security:
+        - refreshToken: [] 
+      responses:
+        204:
+          description: No Content
+        401: 
+          description: Unauthorized
+
+  /security/devices/{deviceId}:
+    delete:
+      summary: Terminate specified device session
+      tags: [ SecurityDevices ]
+      security:
+        - refreshToken: [] 
+      parameters:
+        - name: deviceId
+          in: path
+          description: Id of session that will be terminated
+          required: true
+          schema:
+            type: string
+      responses:
+        204:
+          description: No Content
+        401: 
+          description: Unauthorized
+        403:	
+          description: If try to delete the deviceId of other user
+        404:	
+          description: Not Found
+
+components:
+  securitySchemes:
+    refreshToken:
+      type: apiKey
+      in: cookie
+      name: refreshToken
+      description: "JWT refreshToken inside cookie. Must be correct, and must not expire"
+  schemas:
+    DeviceViewModel:
+      type: object
+      required:
+        - ip
+        - title
+        - lastActiveDate
+        - deviceId
+      properties:
+        ip:
+          type: string
+          description: IP address of device during signing in
+        title:
+          type: string
+          description: 'Device name: for example Chrome 105 (received by parsing http header "user-agent")'
+        lastActiveDate:
+          type: string
+          description: Date of the last generating of refresh/access tokens
+        deviceId:
+          type: string
+          description: Id of connected device session

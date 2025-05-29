@@ -17,7 +17,7 @@ describe('UNIT', () => {
   });
 
   it('❌ should not verify in jwtService', async () => {
-    jest.spyOn(jwtService, 'verifyToken').mockResolvedValue(null);
+    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue(null);
 
     const result = await checkAccessTokenUseCase('Bearer gbfbfbbhf');
 
@@ -25,7 +25,7 @@ describe('UNIT', () => {
   });
 
   it('✅ should verify access token', async () => {
-    jest.spyOn(jwtService, 'verifyToken').mockResolvedValue({ userId: '1' });
+    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue({ userId: '1' });
 
     const result = await checkAccessTokenUseCase('Bearer gbfbfbbhf');
 

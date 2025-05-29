@@ -3,7 +3,7 @@ import { HttpStatus } from '../../../core/types/http-statuses';
 import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
 import { cookieConfig } from '../../../core/types/cookie';
-import { blacklistRepository } from '../../repositories/blacklis.repository';
+import { securityDevicesRepository } from '../../../securityDevices/repositories/securityDevices.repository';
 
 export const refreshTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
   const refreshToken= req.cookies[cookieConfig.refreshToken.name];
@@ -13,22 +13,26 @@ export const refreshTokenGuard = async (req: Request, res: Response, next: NextF
      return;
   }
 
-  const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshToken );
+  /*const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshToken );
   if ( isTokenInBlackList ) {
     res.sendStatus(HttpStatus.Unauthorized);
     return;
-  }
+  }*/
   
-  const payload = await jwtService.verifyRefresToken({
-    token: refreshToken
-  });
+  const payload = await jwtService.verifyRefresToken( refreshToken );
 
   if (payload) {
-    const { userId } = payload;
-    req.user = { id: userId } as IdType;
+    const { userId, deviceId, iat, exp } = payload;
+    if (iat && exp) {
+      const isSessionValid = await securityDevicesRepository.isSessionValid( userId, deviceId, iat, exp )
 
-    next();
-    return;
+      if (isSessionValid) {
+       req.user = { id: userId } as IdType;
+       req.deviceId = deviceId;
+       next();
+       return;
+      }
+    }
   }
     res.sendStatus(HttpStatus.Unauthorized);
     return;

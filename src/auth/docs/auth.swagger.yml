@@ -41,6 +41,8 @@ paths:
                 $ref: '#/components/schemas/APIErrorResult'
         401: 
           description: If the password or login is wrong
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
 
   /auth/refresh-token:
     post:
@@ -95,6 +97,8 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/APIErrorResult'
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
 
   /auth/registration:
     post:
@@ -127,6 +131,8 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/APIErrorResult'
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
   
   /auth/registration-email-resending:
     post:
@@ -159,6 +165,8 @@ paths:
             text/json:
               schema:
                 $ref: '#/components/schemas/APIErrorResult'
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
 
   /auth/logout:
     post:
