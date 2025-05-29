@@ -5,12 +5,16 @@ import { Post } from '../posts/types/post';
 import { Comment } from '../comments/types/comment';
 import { User } from '../users/entities/user.entity';
 import { Blacklist } from '../auth/types/blacklist';
+import { RateLimitType } from '../auth/types/rate-limit';
+import { SecurityDevice } from '../securityDevices/entities/securityDevices.entity';
  
 const BLOGS_COLLECTION_NAME = 'blogs';
 const POST_COLLECTION_NAME = 'post';
 const USER_COLLECTION_NAME = 'users';
 const COMMENT_COLLECTION_NAME = 'comment';
 const BLACKLIST_COLLECTION_NAME = 'blacklist';
+const SESSIONS_COLLECTION_NAME = 'sessions';
+const RATE_LIMIT_COLLECTION_NAME= 'rateLimit'
  
 export let client: MongoClient;
 export let blogCollection: Collection<Blog>;
@@ -18,6 +22,8 @@ export let postCollection: Collection<Post>;
 export let userCollection: Collection<User>;
 export let commentCollection: Collection<Comment>;
 export let blacklistCollection: Collection<Blacklist>;
+export let sessionsCollection: Collection<SecurityDevice>;
+export let rateLimitCollection: Collection<RateLimitType>;
  
 // Подключения к бд
 export async function runDB(url: string): Promise<void> {
@@ -29,7 +35,9 @@ export async function runDB(url: string): Promise<void> {
   postCollection = db.collection<Post>(POST_COLLECTION_NAME);
   userCollection = db.collection<User>(USER_COLLECTION_NAME);
   commentCollection = db.collection<Comment>(COMMENT_COLLECTION_NAME);  
-  blacklistCollection = db.collection<Blacklist>(BLACKLIST_COLLECTION_NAME);
+  blacklistCollection = db.collection<Blacklist>(BLACKLIST_COLLECTION_NAME);  
+  sessionsCollection = db.collection<SecurityDevice>(SESSIONS_COLLECTION_NAME);
+  rateLimitCollection = db.collection<RateLimitType>(RATE_LIMIT_COLLECTION_NAME);
  
   try {
     await client.connect();
@@ -71,5 +79,7 @@ export function getCollections() {
     userCollection: db.collection<User>(USER_COLLECTION_NAME),
     commentCollection: db.collection<Comment>(COMMENT_COLLECTION_NAME),
     blacklistCollection: db.collection<Blacklist>(BLACKLIST_COLLECTION_NAME),
+    sessionsCollection: db.collection<SecurityDevice>(SESSIONS_COLLECTION_NAME),    
+    rateLimitCollection: db.collection<RateLimitType>(RATE_LIMIT_COLLECTION_NAME)
   };
 };

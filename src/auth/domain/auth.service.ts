@@ -14,31 +14,67 @@ import { RegistrationEmailResendingInputDto } from "../dto/registration-email-re
 import { add } from "date-fns/add";
 import { Result } from "../../core/result/result.type";
 import { ResultStatus } from "../../core/result/resultCode";
-import { blacklistRepository } from "../repositories/blacklis.repository";
 import { IdType } from "../../core/types/id";
 import { uuidService } from "../../users/adapters/uuid.service";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { securityDevicesRepository } from "../../securityDevices/repositories/securityDevices.repository";
+import { SecurityDevice } from "../../securityDevices/entities/securityDevices.entity";
+
+type SessionData = {
+  userId: string;
+  deviceId: string;
+}
 
 export const authService = {
-  async loginUser ( dto: LoginInputDto, refreshTokenOld: string ): Promise<{ accessToken: string, refreshToken: string }> {
-    if ( refreshTokenOld ) {
-      const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshTokenOld );
-      if ( !isTokenInBlackList ) {
-        await blacklistRepository.addToBlacklist( refreshTokenOld );
-      }
-    }
+  async loginUser ( dto: LoginInputDto ): Promise<{ accessToken: string, refreshToken: string }> {
+    const { loginOrEmail, password, refreshToken, deviceName, ip } = dto;
 
-    const { loginOrEmail, password } = dto;
+    // if ( refreshTokenOld ) {
+    //   const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshTokenOld );
+    //   if ( !isTokenInBlackList ) {
+    //     await blacklistRepository.addToBlacklist( refreshTokenOld );
+    //   }
+    // }
   
     const result = await this._checkCredentials( loginOrEmail, password );
     const userId = result._id.toString();
-    const tokens = await this._createPairsOfTokens( userId );
+    
+    let deviceId = '';
+
+    if ( refreshToken ) {
+      const payload = await jwtService.verifyRefresToken( refreshToken );
+      if (payload) {
+        const session = await securityDevicesRepository.findByIdAndUserId({ 
+          id: payload.deviceId, 
+          userId: payload.userId 
+        }); 
+
+      if ( session ) deviceId = payload.deviceId;
+      }
+    }
+
+    if ( deviceId === '' ) {
+      const newSession = new SecurityDevice(
+        userId, 
+        deviceName, 
+        ip,
+      );
+      deviceId = await securityDevicesRepository.createSession( newSession );
+    }
+  
+    const tokens = await this._createPairsOfTokens({ userId, deviceId });
+    await this._updateSession ( tokens.refreshToken, deviceId );
 
     return tokens; 
   },
 
-  async refreshToken ( refreshTokenOld: string, userId: string): Promise<{ accessToken: string, refreshToken: string }> {
-    await blacklistRepository.addToBlacklist( refreshTokenOld );
-    const tokens = await this._createPairsOfTokens( userId );
+  async refreshToken ( 
+    userId: string, 
+    deviceId: string
+  ): Promise<{ accessToken: string, refreshToken: string }> {
+    //await blacklistRepository.addToBlacklist( refreshTokenOld );
+    const tokens = await this._createPairsOfTokens({ userId, deviceId });
+    await this._updateSession ( tokens.refreshToken, deviceId );
     
     return tokens;
   },
@@ -126,8 +162,12 @@ export const authService = {
     };
   },
 
-  async logoutUser( refreshTokenOld: string ): Promise<void> {
-    await blacklistRepository.addToBlacklist( refreshTokenOld );
+  async logoutUser( userId: string, deviceId: string ): Promise<void> {
+    //await blacklistRepository.addToBlacklist( refreshTokenOld );
+    const deleteCount = await securityDevicesRepository.deleteById( userId, deviceId );
+    if ( deleteCount < 1 ) {
+      throw new EntityNotFoundError();
+    }
     return;
   },
 
@@ -143,7 +183,7 @@ export const authService = {
       };
       }
 
-    const result = await jwtService.verifyAcsessToken({ token });
+    const result = await jwtService.verifyAcsessToken( token );
 
     if (!result) {
       return {
@@ -181,10 +221,21 @@ export const authService = {
     return user;
   },
 
-  async _createPairsOfTokens ( userId: string): Promise<{ accessToken: string, refreshToken: string }> {
-    const accessToken =  await jwtService.createAcsessToken({ userId });
-    const refreshToken = await jwtService.createRefreshToken({ userId });
+  async _createPairsOfTokens ( sessionData: SessionData): Promise<{ accessToken: string, refreshToken: string }> {
+    const { userId } = sessionData;
+
+    const accessToken =  await jwtService.createAcsessToken( userId );
+    const refreshToken = await jwtService.createRefreshToken( sessionData );
 
     return { accessToken, refreshToken };
+  },
+
+  async _updateSession ( refreshToken: string, deviceId: string ): Promise<void> {
+    const payload = await jwtService.verifyRefresToken( refreshToken );
+    if (payload && payload.iat && payload.exp) {
+      await securityDevicesRepository.updateSession( deviceId, payload.iat, payload.exp );
+      return;
+    } 
+      console.log('throw new Error');    
   },
 }

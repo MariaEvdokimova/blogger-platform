@@ -17,15 +17,15 @@ export const refreshTokenHandler = async (
       res.sendStatus(HttpStatus.Unauthorized);
       return;
     }
-
+    
     const user = usersQueryRepository.findById(userId);
     if ( !user ) {
       res.sendStatus(HttpStatus.Unauthorized);
       return;
     }
 
-    const refreshToken= req.cookies[cookieConfig.refreshToken.name];
-    const tokens = await authService.refreshToken( refreshToken, userId );
+    //const refreshToken= req.cookies[cookieConfig.refreshToken.name];
+    const tokens = await authService.refreshToken( userId, req.deviceId! );
     
     cookieService.createRefreshTokenCookie( res, tokens.refreshToken );
     res.status(HttpStatus.Success).send({ accessToken: tokens.accessToken });

@@ -31,7 +31,7 @@ describe('AUTH-INTEGRATION', () => {
   let spy: jest.SpyInstance;
 
   describe('User Registration', () => {
-    spy = jest.spyOn(nodemailerService, 'sendEmail').mockResolvedValue(true);
+    spy = jest.spyOn(nodemailerService, 'sendEmail').mockResolvedValue();
 
     it('✅ should register user with correct data', async () => {
       const { login, password, email } = testSeeder.createUserDto();
@@ -107,7 +107,7 @@ describe('AUTH-INTEGRATION', () => {
   });
 
   describe('Registration Email Resending', () => {
-    spy = jest.spyOn(nodemailerService, 'sendEmail').mockResolvedValue(true);
+    spy = jest.spyOn(nodemailerService, 'sendEmail').mockResolvedValue();
 
     it('❌ should not resend message if email is already confirmed', async () => {
       const { login, password, email } = testSeeder.createUserDto();
