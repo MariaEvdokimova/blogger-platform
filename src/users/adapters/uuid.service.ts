@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
+import { injectable } from 'inversify';
 
-export const uuidService = {
+@injectable()
+export class UuidService {
   generate() {
     return randomUUID();
   }

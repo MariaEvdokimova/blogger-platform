@@ -1,6 +1,7 @@
 
-import { authService } from '../../src/auth/domain/auth.service';
-import { jwtService } from '../../src/auth/adapters/jwt.service';
+import { JwtService } from '../../src/auth/adapters/jwt.service';
+import { AuthService } from '../../src/auth/domain/auth.service';
+import { container } from '../../src/composition-root';
 import { ResultStatus } from '../../src/core/result/resultCode';
 
 describe('UNIT', () => {
@@ -8,26 +9,29 @@ describe('UNIT', () => {
     jest.restoreAllMocks();
   });
 
-  const checkAccessTokenUseCase = authService.checkAccessToken;
-
   it('❌ should not verify noBearer auth', async () => {
-    const result = await checkAccessTokenUseCase('Basic gbfbfbbhf');
+      const authService = container.get(AuthService);
+    const result = await authService.checkAccessToken('Basic gbfbfbbhf');
 
     expect(result.status).toBe(ResultStatus.Unauthorized);
   });
 
   it('❌ should not verify in jwtService', async () => {
-    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue(null);
+    const authService = container.get(AuthService);
+    const jwtService = container.get(JwtService);
+    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue(null) as jest.SpyInstance;
 
-    const result = await checkAccessTokenUseCase('Bearer gbfbfbbhf');
+    const result = await authService.checkAccessToken('Bearer gbfbfbbhf');
 
     expect(result.status).toBe(ResultStatus.Unauthorized);
   });
 
   it('✅ should verify access token', async () => {
-    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue({ userId: '1' });
+    const authService = container.get(AuthService);
+    const jwtService = container.get(JwtService);
+    jest.spyOn(jwtService, 'verifyAcsessToken').mockResolvedValue({ userId: '1' }) as jest.SpyInstance;
 
-    const result = await checkAccessTokenUseCase('Bearer gbfbfbbhf');
+    const result = await authService.checkAccessToken('Bearer gbfbfbbhf');
 
     expect(result.status).toBe(ResultStatus.Success);
   });

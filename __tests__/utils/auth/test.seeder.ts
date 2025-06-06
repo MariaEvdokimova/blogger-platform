@@ -4,10 +4,12 @@ import { add } from "date-fns/add";
 import { getCollections } from "../../../src/db/mongo.db";
 import { ConfirmetionStatus } from "../../../src/users/entities/user.entity";
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
-import { createUser } from "../users/create-user";
 import { routersPaths } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
-import { uuidService } from '../../../src/users/adapters/uuid.service';
+import { container } from '../../../src/composition-root';
+import { UuidService } from '../../../src/users/adapters/uuid.service';
+
+const uuidService = container.get(UuidService);
 
 type RegisterUserPayloadType = {
   login: string,

@@ -1,10 +1,12 @@
 import nodemailer from 'nodemailer';
 import { appConfig } from '../../core/config/config';
 import SMTPTransport from 'nodemailer/lib/smtp-transport';
+import { injectable } from 'inversify';
 
 const MAIL_FROM = `"Blogger platform" <${appConfig.EMAIL}>`;
 
-export const nodemailerService = {
+@injectable()
+export class NodemailerService {
   async sendEmail(
     email: string,
     code: string,
@@ -30,5 +32,5 @@ export const nodemailerService = {
       html: template(code),
     });
 
-  },
+  }
 };

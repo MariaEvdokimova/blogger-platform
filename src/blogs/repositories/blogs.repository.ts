@@ -3,17 +3,19 @@ import { BlogInputDto } from "../dto/blog.input-dto";
 import { Blog } from "../types/blog";
 import { blogCollection } from "../../db/mongo.db";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { injectable } from "inversify";
 
-export const blogsRepository = {
+@injectable()
+export class BlogsRepository {
   async findById(id: string): Promise<WithId<Blog> | null> {
     this._checkObjectId(id);
     return blogCollection.findOne({ _id: new ObjectId(id)});
-  },
+  }
 
   async create( newBlog: Blog): Promise<string> {
     const insertResult = await blogCollection.insertOne(newBlog);
     return insertResult.insertedId.toString();
-  }, 
+  }
 
   async update(id: string, newBlog: BlogInputDto) {
     this._checkObjectId(id);
@@ -32,7 +34,7 @@ export const blogsRepository = {
     }
 
     return;
-  },
+  }
 
   async delete(id: string) {
     this._checkObjectId(id);
@@ -48,13 +50,13 @@ export const blogsRepository = {
     }
 
     return;
-  },
+  }
   
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
       const isValidId = ObjectId.isValid(id);
-      if ( !isValidId ) {
-        throw new EntityNotFoundError();
-      }
-      return isValidId;
-    },
+    if ( !isValidId ) {
+      throw new EntityNotFoundError();
+    }
+    return isValidId;
+  }
 }

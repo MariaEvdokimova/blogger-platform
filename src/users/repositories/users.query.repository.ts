@@ -4,14 +4,16 @@ import { UserViewModel } from "../types/user-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { User } from "../entities/user.entity";
+import { injectable } from "inversify";
 
-export const usersQueryRepository = {
+@injectable()
+export class UsersQueryRepository {
   async findById( id: string ): Promise<UserViewModel | null> {
     this._checkObjectId(id);
     const user = await userCollection.findOne({_id: new ObjectId(id)});
     
     return user ? this._mapToUserViewModel( user ) : null;
-  },
+  }
 
   async findByIdOrFail(id: string): Promise<WithId<User>> {
     this._checkObjectId(id);
@@ -23,8 +25,8 @@ export const usersQueryRepository = {
     }
     
     return user;
-  },
-
+  }
+  
   async getUsers( dto: PaginationQueryParamsDto ): Promise<WithId<User>[]> {
     let filter: any = {};
     const { pageNumber, pageSize, sortBy, sortDirection, searchLoginTerm, searchEmailTerm } = dto;
@@ -44,7 +46,7 @@ export const usersQueryRepository = {
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
       .toArray();
-  },
+  }
 
   async getUsersCount( searchLoginTerm: string | null, searchEmailTerm: string | null ): Promise<number> {
       let filter: any = {};
@@ -59,16 +61,16 @@ export const usersQueryRepository = {
       }
 
       return userCollection.countDocuments(filter);
-    },
+    }
 
-   _mapToUserViewModel(user: WithId<User>): UserViewModel {
+   private _mapToUserViewModel(user: WithId<User>): UserViewModel {
     return {
       id: user._id.toString(),
       login: user.login,
       email: user.email,
       createdAt: user.createdAt,
     };
-  },
+  }
 
   async mapMeViewModel ( user: UserViewModel) {
     return { 
@@ -76,7 +78,7 @@ export const usersQueryRepository = {
       login:	user.login,
       userId:	user.id,
      }
-  },
+  }
 
   async mapPaginationViewMdel (
       dto: {
@@ -93,13 +95,13 @@ export const usersQueryRepository = {
         totalCount: dto.usersCount,
         items: dto.users.map(this._mapToUserViewModel)
       };
-    },
+    }
     
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 }

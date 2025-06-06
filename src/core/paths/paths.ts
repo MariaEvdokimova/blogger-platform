@@ -8,7 +8,9 @@ export const routersPaths = {
     registration: '/auth/registration',
     me: '/auth/me',
     registrationConfirmation: '/auth/registration-confirmation',
-    registrationEmailResending: '/auth/registration-email-resending'
+    registrationEmailResending: '/auth/registration-email-resending',
+    passwordRecovery: '/auth/password-recovery',
+    newPassword: '/auth/new-password'
   },
   blogs: '/blogs',
   comments: '/comments',

@@ -1,18 +1,20 @@
 import { ObjectId, WithId } from "mongodb";
 import { sessionsCollection } from "../../db/mongo.db";
 import { SecurityDevice } from "../entities/securityDevices.entity";
+import { injectable } from "inversify";
 
 type FindSecurityDevicesParams = {
   id: string;
   userId: string;
 };
 
-export const securityDevicesRepository = {
+@injectable()
+export class SecurityDevicesRepository {
 
   async createSession ( newSession: SecurityDevice): Promise<string> {
     const insertResult = await sessionsCollection.insertOne( newSession );
     return insertResult.insertedId.toString();
-  },
+  }
 
   async findByIdAndUserId({
     id,
@@ -22,7 +24,7 @@ export const securityDevicesRepository = {
         _id: new ObjectId( id ),
         user_id: userId
     });
-  },
+  }
   
   async findUserByDeviceId( deviceId: string):  Promise< string | undefined> {
     const isValidId = await this._checkObjectId( deviceId );
@@ -35,7 +37,7 @@ export const securityDevicesRepository = {
     });
 
     return session?.userId;
-  },
+  }
 
   async updateSession ( id: string, iat: number, exp: number ): Promise<number> {
     const updatedResult = await sessionsCollection.updateOne( 
@@ -50,7 +52,7 @@ export const securityDevicesRepository = {
       }
     );
     return updatedResult.matchedCount;
-  },
+  }
 
   async isSessionValid (
     userId: string,
@@ -70,7 +72,7 @@ export const securityDevicesRepository = {
     const now = Math.floor(Date.now() / 1000); // текущий timestamp в секундах
 
     return session.exp > now;
-  },
+  }
 
   async deleteById ( userId: string, deviceId: string ): Promise<number> {
     const isValidId = await this._checkObjectId( deviceId );
@@ -83,7 +85,7 @@ export const securityDevicesRepository = {
       _id: new ObjectId( deviceId ) 
     });
     return deleteResult.deletedCount;
-  },
+  }
 
   async deleteOtherSessions ( userId: string, deviceId: string ): Promise<number> {
     const isValidId = await this._checkObjectId( deviceId );
@@ -99,9 +101,9 @@ export const securityDevicesRepository = {
     });
 
     return deleteResult.deletedCount;
-  },
+  }
 
-  async _checkObjectId(id: string): Promise<boolean> {
+  private async _checkObjectId(id: string): Promise<boolean> {
     return ObjectId.isValid(id);
-  },
+  }
 }

@@ -44,6 +44,74 @@ paths:
         429:
           description: More than 5 attempts from one IP-address during 10 seconds
 
+  /auth/password-recovery:
+    post:
+      summary: Password recovery via Email confirmation. Email should be sent with RecoveryCode inside
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/PasswordRecoveryInputModel'
+      responses:
+        204:
+          description: Even if current email is not registered (for prevent user's email detection)
+        400:
+          description: If the inputModel has invalid email (for example 222^gmail.com)
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
+
+  /auth/new-password:
+    post:
+      summary: Confirm Password recovery
+      tags:
+        - Auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPasswordRecoveryInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/NewPasswordRecoveryInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/NewPasswordRecoveryInputModel'
+      responses:
+        204:
+          description: If code is valid and new password is accepted
+        400:
+          description: If the inputModel has incorrect value (for incorrect password length) or RecoveryCode is incorrect or expired
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        429:
+          description: More than 5 attempts from one IP-address during 10 seconds
+
   /auth/refresh-token:
     post:
       summary: Generate new pair of access and refresh tokens (in cookie client must send correct refreshToken that will be revoked after refreshing)
@@ -274,6 +342,32 @@ components:
           type: string
           description: Code that be sent via Email inside link
     
+    PasswordRecoveryInputModel:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          pattern: ^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$
+          example: example@example.com
+          description: Email of registered user
+
+    NewPasswordRecoveryInputModel:
+      type: object
+      required:
+        - newPassword
+        - recoveryCode
+      properties:
+        newPassword:
+          type: string
+          maxLength: 20
+          minLength: 6
+          description: New password
+        recoveryCode:
+          type: string
+          description: New password
+
     RegistrationEmailResending:
       type: object
       required:

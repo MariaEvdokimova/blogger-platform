@@ -4,17 +4,19 @@ import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { Comment } from "../types/comment";
 import { CommentInputDto } from "../dto/comment.input-dto";
 import { ForbiddenError } from "../../core/errors/forbidden.error";
+import { injectable } from "inversify";
 
-export const commentsRepository = {
+@injectable()
+export class CommentsRepository {
   async findById(id: string): Promise<WithId<Comment> | null> {
     this._checkObjectId(id);
     return commentCollection.findOne({ _id: new ObjectId(id)});
-  },
+  }
 
   async create( newComment: Comment): Promise<string> {
     const insertResult = await commentCollection.insertOne( newComment );
     return insertResult.insertedId.toString();
-  }, 
+  } 
 
   async update(id: string, newComment: CommentInputDto) {
     this._checkObjectId(id);
@@ -33,7 +35,7 @@ export const commentsRepository = {
     }
 
     return;
-  },
+  }
 
   async delete(id: string) {
     this._checkObjectId(id);
@@ -49,7 +51,7 @@ export const commentsRepository = {
     }
 
     return;
-  },
+  }
 
   async verifyUserOwnership ( commentId: string, userId: string) {
     this._checkObjectId( userId );
@@ -64,13 +66,13 @@ export const commentsRepository = {
       throw new ForbiddenError();
     }
 
-  },
+  }
   
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
-      const isValidId = ObjectId.isValid(id);
-      if ( !isValidId ) {
-        throw new EntityNotFoundError();
-      }
-      return isValidId;
-    },
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
+    const isValidId = ObjectId.isValid(id);
+    if ( !isValidId ) {
+      throw new EntityNotFoundError();
+    }
+    return isValidId;
+  }
 }

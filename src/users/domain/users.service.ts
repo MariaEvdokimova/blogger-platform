@@ -1,15 +1,22 @@
 import { UserInputDto } from "../dto/user.input-dto";
-import { usersRepository } from "../repositories/users.repository";
-import { bcryptService } from '../../auth/adapters/bcrypt.service';
+import { UsersRepository } from "../repositories/users.repository";
+import { BcryptService } from '../../auth/adapters/bcrypt.service';
 import { ConfirmetionStatus, User } from "../entities/user.entity";
+import { inject, injectable } from "inversify";
 
-export const usersService = {
+@injectable()
+export class UsersService {
+  constructor(
+    @inject(UsersRepository) public usersRepository: UsersRepository,
+    @inject(BcryptService) public bcryptService: BcryptService
+  ){}
+
   async create( user: UserInputDto ): Promise<string> {
     const { login, email, password } = user;
 
-    await usersRepository.doesExistByLoginOrEmail( login, email );
+    await this.usersRepository.doesExistByLoginOrEmail( login, email );
 
-    const passwordHash = await bcryptService.generateHash( password );
+    const passwordHash = await this.bcryptService.generateHash( password );
 
     const newUser = new User( 
       login, 
@@ -19,11 +26,11 @@ export const usersService = {
         confirmationCode: '',
         isConfirmed: ConfirmetionStatus.confirmed,
       });
-    return await usersRepository.create( newUser );
-  },
+    return await this.usersRepository.create( newUser );
+  }
 
   async delete ( id: string ): Promise<void> {
-    await usersRepository.delete( id );
+    await this.usersRepository.delete( id );
     return;
-  },
+  }
 }

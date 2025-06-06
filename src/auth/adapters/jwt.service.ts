@@ -1,5 +1,6 @@
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { appConfig } from "../../core/config/config";
+import { injectable } from "inversify";
 
 type CreateRefreshTokenParams = {
   userId: string;
@@ -22,10 +23,11 @@ interface VerifiedRefreshTokenPayload {
   exp?: number;
 }
 
-export const jwtService = {
+@injectable()
+export class JwtService {
   async createAcsessToken ( userId: string ) : Promise<string> {
     return jwt.sign( { userId }, appConfig.JWT_SECRET, { expiresIn: `${appConfig.JWT_TIME}s` });
-  },
+  }
 
   async createRefreshToken ({ userId, deviceId }: CreateRefreshTokenParams ) : Promise<string> {
     return jwt.sign( 
@@ -33,7 +35,7 @@ export const jwtService = {
       appConfig.R_JWT_SECRET, 
       { expiresIn: `${appConfig.R_JWT_TIME}s` }
     );
-  },
+  }
 
   async verifyAcsessToken( token: string ): Promise<{ userId: string } | null> {
     try {
@@ -42,7 +44,7 @@ export const jwtService = {
       console.error("Token verify some error");
       return null;
     }
-  },
+  }
   
   async verifyRefresToken( token: string ): Promise< VerifiedRefreshTokenPayload | null> {
     try {
@@ -57,5 +59,5 @@ export const jwtService = {
       console.error("Token verify some error");
       return null;
     }
-  },
+  }
 }

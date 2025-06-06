@@ -3,8 +3,10 @@ import { userCollection } from "../../db/mongo.db";
 import { ValidationError } from "../../core/errors/validation.error";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { ConfirmetionStatus, User } from "../entities/user.entity";
+import { injectable } from "inversify";
 
-export const usersRepository = {
+@injectable()
+export class UsersRepository {
 
   async doesExistByLoginOrEmail(
     login: string,
@@ -23,7 +25,7 @@ export const usersRepository = {
     }
 
     return;
-  },
+  }
 
   async findByLoginOrEmail( loginOrEmail: string ): Promise<WithId<User> | null> {
     return userCollection.findOne( {
@@ -32,12 +34,16 @@ export const usersRepository = {
         { email: loginOrEmail }
       ]
     });
-  },
+  }
+  
+  async findByEmail( email: string ): Promise<WithId<User> | null> {
+    return userCollection.findOne( { email });
+  }
 
   async create( newUser: User ): Promise<string> {
     const insertResult = await userCollection.insertOne( newUser );
     return insertResult.insertedId.toString();
-  },
+  }
 
   async delete ( id: string ): Promise<void> {
     this._checkObjectId(id);
@@ -51,14 +57,14 @@ export const usersRepository = {
     }
 
     return;
- },
+ }
 
  async findUserByConfirmationCode ( code: string ): Promise<WithId<User> | null> {
     return userCollection.findOne({ "emailConfirmation.confirmationCode": code });
- },
+ }
 
  async updateConfirmationStatus ( id: ObjectId ): Promise<void> {
-    userCollection.updateOne( 
+    await userCollection.updateOne( 
       {
         _id: id
       }, 
@@ -69,7 +75,7 @@ export const usersRepository = {
       }
     );
     return;
-  },
+  }
   
   async updateConfirmation ( id: ObjectId, expirationDate: Date, confirmationCode: string ): Promise<number> {
     const updatedResult = await userCollection.updateOne( 
@@ -84,13 +90,27 @@ export const usersRepository = {
       }
     );
     return updatedResult.matchedCount;
-  },
+  }
 
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  async updatePassword( userId: ObjectId, hash: string ): Promise<void>  {
+    await userCollection.updateOne( 
+      {
+        _id: userId
+      }, 
+      {
+        $set: { 
+          passwordHash: hash
+        }
+      }
+    );
+    return;
+  }
+
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 }
