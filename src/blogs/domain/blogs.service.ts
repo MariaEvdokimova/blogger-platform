@@ -1,16 +1,23 @@
 import { ObjectId, WithId } from "mongodb";
-import { blogsRepository } from "../repositories/blogs.repository";
+import { BlogsRepository } from "../repositories/blogs.repository";
 import { Blog } from "../types/blog";
 import { BlogInputDto } from "../dto/blog.input-dto";
-import { postRepository } from "../../posts/repositories/posts.repository";
+import { PostRepository } from "../../posts/repositories/posts.repository";
 import { Post } from "../../posts/types/post";
 import { PostInBlogInputDto } from "../dto/post-in-blog.input-dto";
 import { BlogViewModels } from "../types/blog-view-model";
+import { inject, injectable } from "inversify";
 
-export const blogsService = {
+@injectable()
+export class BlogsService {
+  constructor(
+    @inject(BlogsRepository) public blogsRepository: BlogsRepository,
+    @inject(PostRepository) public postRepository: PostRepository,
+  ){}
+
   async findById(id: string): Promise<WithId<Blog> | null> {
-    return await blogsRepository.findById(id);
-  },
+    return await this.blogsRepository.findById(id);
+  }
 
   async create( blog: BlogInputDto): Promise<string> {
     const { name, description, websiteUrl } = blog;
@@ -22,8 +29,8 @@ export const blogsService = {
           isMembership: false,
         } 
     
-    return await blogsRepository.create(newBlog);
-  }, 
+    return await this.blogsRepository.create(newBlog);
+  }
 
   async createPost( post: PostInBlogInputDto, blog: BlogViewModels ): Promise<string> {
     const { title, shortDescription, content } = post;
@@ -38,8 +45,8 @@ export const blogsService = {
       createdAt: new Date(),
     };
      
-    return await postRepository.create( newPost );
-  },
+    return await this.postRepository.create( newPost );
+  }
 
   async update(id: string, dto: BlogInputDto): Promise<void> {
     const { name, description, websiteUrl } = dto;
@@ -50,12 +57,12 @@ export const blogsService = {
       websiteUrl: websiteUrl
     }
 
-    await blogsRepository.update(id, newBlog);
+    await this.blogsRepository.update(id, newBlog);
     return;
-  },
+  }
 
   async delete(id: string): Promise<void> {
-    await blogsRepository.delete(id);
+    await this.blogsRepository.delete(id);
     return;
-  },
+  }
 }

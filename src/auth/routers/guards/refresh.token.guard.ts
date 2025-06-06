@@ -1,9 +1,13 @@
 import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../../core/types/http-statuses';
-import { jwtService } from '../../adapters/jwt.service';
 import { IdType } from '../../../core/types/id';
 import { cookieConfig } from '../../../core/types/cookie';
-import { securityDevicesRepository } from '../../../securityDevices/repositories/securityDevices.repository';
+import { container } from '../../../composition-root';
+import { JwtService } from '../../adapters/jwt.service';
+import { SecurityDevicesRepository } from '../../../securityDevices/repositories/securityDevices.repository';
+
+const jwtService = container.get(JwtService);
+const securityDevicesRepository = container.get(SecurityDevicesRepository);
 
 export const refreshTokenGuard = async (req: Request, res: Response, next: NextFunction) => {
   const refreshToken= req.cookies[cookieConfig.refreshToken.name];

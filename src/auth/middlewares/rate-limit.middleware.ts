@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import { HttpStatus } from '../../core/types/http-statuses';
-import { rateLimitRepository } from '../repositories/rate-limit.repository';
+import { container } from '../../composition-root';
+import { RateLimitRepository } from '../repositories/rate-limit.repository';
 
+const rateLimitRepository = container.get(RateLimitRepository);
 
 export const rateLimitMiddleware = async (
   req: Request,

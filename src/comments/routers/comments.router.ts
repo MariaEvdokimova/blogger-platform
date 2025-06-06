@@ -1,18 +1,17 @@
 import { Router } from "express";
 import { accessTokenGuard } from "../../auth/routers/guards/access.token.guard";
-import { getCommentHandler } from "./handlers/get-comment.handler";
-import { updateCommentHandler } from "./handlers/update-comment.handler";
-import { deleteCommentHandler } from "./handlers/delete-comment.handler";
 import { contentValidation } from "../validation/comment.input-dto.validation-middlewares";
 import { inputValidationResultMiddleware } from "../../core/middlewares/validation/input-validtion-result.middleware";
+import { container } from "../../composition-root";
+import { CommentsController } from "./comments.controller";
 
-
+const commentsController = container.get(CommentsController);
 export const commentsRouter = Router({});
 
 commentsRouter
   .get(
     '/:id',
-    getCommentHandler
+    commentsController.getComment.bind(commentsController)
   )
 
   .put(
@@ -20,11 +19,11 @@ commentsRouter
     accessTokenGuard,
     contentValidation,
     inputValidationResultMiddleware,
-    updateCommentHandler
+    commentsController.updateComment.bind(commentsController)
   )
   
   .delete(
     '/:commentId',
     accessTokenGuard,
-    deleteCommentHandler
+    commentsController.deleteComment.bind(commentsController)
   )

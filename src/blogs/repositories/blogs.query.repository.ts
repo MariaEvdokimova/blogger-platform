@@ -4,8 +4,10 @@ import { Blog } from "../types/blog";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { BlogViewModels } from "../types/blog-view-model";
+import { injectable } from "inversify";
 
-export const blogsQueryRepository = {
+@injectable()
+export class BlogsQueryRepository {
   async getBlogs( dto: PaginationQueryParamsDto ): Promise<WithId<Blog>[]> {
     const filter: any = {};
     const { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm } = dto;
@@ -20,7 +22,7 @@ export const blogsQueryRepository = {
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
       .toArray();
-  },
+  }
 
   async getBlogsCount( searchNameTerm: string | null ): Promise<number> {
     const filter: any = {};
@@ -28,12 +30,12 @@ export const blogsQueryRepository = {
       filter.name = { $regex: searchNameTerm, $options: 'i'};
     }
     return blogCollection.countDocuments(filter);
-  },
+  }
   
   async findById(id: string): Promise<WithId<Blog> | null> {
     this._checkObjectId(id);
     return await blogCollection.findOne({ _id: new ObjectId(id)});    
-  },
+  }
 
   async findByIdOrFail(id: string): Promise<BlogViewModels | null> {
     this._checkObjectId(id);
@@ -45,7 +47,7 @@ export const blogsQueryRepository = {
     }
     
     return blog ? this._getInView(blog) : null;
-  },
+  }
 
   async mapPaginationViewMdel (
     dto: {
@@ -62,9 +64,9 @@ export const blogsQueryRepository = {
       totalCount: dto.blogsCount,
       items: dto.blogs.map(this._getInView)
     };
-  },
+  }
 
-  _getInView(blog: WithId<Blog>): BlogViewModels {
+  private _getInView(blog: WithId<Blog>): BlogViewModels {
       return {
         id: blog._id.toString(),
         name:	blog.name,
@@ -73,13 +75,13 @@ export const blogsQueryRepository = {
         createdAt: blog.createdAt,
         isMembership: blog.isMembership,
       };
-  },
+  }
   
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 };

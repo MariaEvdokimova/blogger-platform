@@ -5,12 +5,10 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { clearDb } from "../../utils/clear-db";
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
 import { ObjectId } from "mongodb";
-import { appConfig } from "../../../src/core/config/config";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 

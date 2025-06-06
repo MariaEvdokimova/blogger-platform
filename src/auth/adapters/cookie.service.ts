@@ -1,8 +1,10 @@
 import { Response } from "express";
 import { cookieConfig } from '../../core/types/cookie'
 import { routersPaths } from '../../core/paths/paths'
+import { injectable } from "inversify";
 
-export const cookieService = {
+@injectable()
+export class CookieService {
   createRefreshTokenCookie ( res: Response, token: string ){
     res.cookie(cookieConfig.refreshToken.name, token, {
       httpOnly: cookieConfig.refreshToken.httpOnly, 
@@ -10,7 +12,7 @@ export const cookieService = {
       path: routersPaths.common,
       maxAge: cookieConfig.refreshToken.maxAge
     })
-  },
+  }
   
   clearRefreshTokenCookie( res: Response ){
     res.clearCookie(cookieConfig.refreshToken.name, {

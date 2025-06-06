@@ -4,8 +4,6 @@ import request from "supertest";
 import express from "express";
 import { setupApp } from "../../../src/setup-app";
 import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
-import { appConfig } from "../../../src/core/config/config";
-import { clearDb } from "../../utils/clear-db";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 describe('Comments API', () => {

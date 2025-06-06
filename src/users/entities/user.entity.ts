@@ -1,5 +1,4 @@
 import { add } from "date-fns/add";
-import { uuidService } from "../adapters/uuid.service";
 
 export enum ConfirmetionStatus {
   confirmed = 'confirmed',
@@ -10,12 +9,12 @@ export class User {
   login: string;
   email: string;
   passwordHash: string;
-  createdAt: Date;
+  createdAt: Date;  
   emailConfirmation: {    
     expirationDate: Date;
     confirmationCode: string;
     isConfirmed: ConfirmetionStatus;
-  }
+  };
 
   constructor(
     login: string, 
@@ -25,18 +24,20 @@ export class User {
       expirationDate: Date;
       confirmationCode: string;
       isConfirmed: ConfirmetionStatus;
-    }>) {
-      this.login = login
-      this.email = email
-      this.passwordHash = hash
-      this.createdAt = new Date()
-      this.emailConfirmation = {
-          expirationDate: emailConfirmation?.expirationDate ?? add(new Date(), {
-            hours: 1,
-            minutes: 3
-          }),
-          confirmationCode: emailConfirmation?.confirmationCode ?? uuidService.generate(),
-          isConfirmed: emailConfirmation?.isConfirmed ?? ConfirmetionStatus.unconfirmed
-      }
+    }>,
+  ) {
+    this.login = login
+    this.email = email
+    this.passwordHash = hash
+    this.createdAt = new Date()
+    
+    this.emailConfirmation = {
+        expirationDate: emailConfirmation?.expirationDate ?? add(new Date(), {
+          hours: 1,
+          minutes: 3
+        }),
+        confirmationCode: emailConfirmation?.confirmationCode ?? '',
+        isConfirmed: emailConfirmation?.isConfirmed ?? ConfirmetionStatus.unconfirmed
+    }
   }
 }

@@ -1,22 +1,20 @@
 import { Router } from "express";
-import { loginAuthHandler } from "./handlers/login-auth.handler";
 import { inputValidationResultMiddleware } from "../../core/middlewares/validation/input-validtion-result.middleware";
 import { passwordValidation } from "../../users/validation/password.validation";
 import { loginOrEmailValidation } from "../../users/validation/login-or-email.validation";
 import { accessTokenGuard } from "./guards/access.token.guard";
-import { getMeHandler } from "./handlers/get-me.handler";
 import { routersPaths } from "../../core/paths/paths";
 import { emailValidation } from "../../users/validation/email.validation";
 import { loginValidation } from "../../users/validation/login.validation";
 import { codeValidation } from "../validation/codeValidation";
-import { registrationEmailResendingHandler } from "./handlers/registration-email-resending.handler";
-import { registrationHandler } from "./handlers/registration.handler";
-import { registrationConfirmationHandler } from "./handlers/registration-confirmation.handler";
-import { refreshTokenHandler } from "./handlers/refresh-token.handler";
 import { refreshTokenGuard } from "./guards/refresh.token.guard";
-import { logoutAuthHandler } from "./handlers/logout-auth.handler";
 import { rateLimitMiddleware } from "../middlewares/rate-limit.middleware";
+import { container } from "../../composition-root";
+import { AuthController } from "./auth.controller";
+import { recoveryCodeValidation } from "../../users/validation/recovery-code.validation";
+import { newPasswordValidation } from "../../users/validation/new-password.validation";
 
+const authController = container.get(AuthController);
 export const authRouter = Router({});
 
 authRouter
@@ -26,13 +24,30 @@ authRouter
     passwordValidation,
     loginOrEmailValidation,
     inputValidationResultMiddleware,
-    loginAuthHandler
+    authController.loginAuth.bind(authController)
+  )
+
+  .post(
+    routersPaths.auth.passwordRecovery,
+    rateLimitMiddleware,    
+    emailValidation,
+    inputValidationResultMiddleware,
+    authController.passwordRecovery.bind(authController)
+  )
+
+  .post(
+    routersPaths.auth.newPassword,
+    rateLimitMiddleware,
+    newPasswordValidation,    
+    //recoveryCodeValidation,
+    inputValidationResultMiddleware,
+    authController.newPassword.bind(authController)
   )
 
   .post(
     routersPaths.auth.refreshToken,
     refreshTokenGuard,
-    refreshTokenHandler
+    authController.refreshToken.bind(authController)
   )
 
   .post(
@@ -40,7 +55,7 @@ authRouter
     rateLimitMiddleware,
     codeValidation,
     inputValidationResultMiddleware,
-    registrationConfirmationHandler
+    authController.registrationConfirmation.bind(authController)
   )
 
   .post(
@@ -50,7 +65,7 @@ authRouter
     passwordValidation,
     emailValidation,
     inputValidationResultMiddleware,
-    registrationHandler
+    authController.registration.bind(authController)
   )
   
   .post(
@@ -58,18 +73,18 @@ authRouter
     rateLimitMiddleware,
     emailValidation,
     inputValidationResultMiddleware,
-    registrationEmailResendingHandler
+    authController.registrationEmailResending.bind(authController)
   )
 
   .post(
     routersPaths.auth.logout,
     refreshTokenGuard,
-    logoutAuthHandler
+    authController.logoutAuth.bind(authController)
   )
 
   .get(
     routersPaths.auth.me,
     accessTokenGuard,
-    getMeHandler
+    authController.getMe.bind(authController)
   )
   

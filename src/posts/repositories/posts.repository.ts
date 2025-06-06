@@ -3,17 +3,19 @@ import { PostInputDto } from "../dto/post.input-dto";
 import { Post } from "../types/post"
 import { postCollection } from "../../db/mongo.db";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { injectable } from "inversify";
 
-export const postRepository = {
+@injectable()
+export class PostRepository {
   async findById( id: string ): Promise<WithId<Post> | null> {
     this._checkObjectId(id);
     return postCollection.findOne({ _id: new ObjectId(id) });
-  },
+  }
   
   async create( newPost: Post ): Promise<string> {
     const insertedPost = await postCollection.insertOne( newPost );
     return insertedPost.insertedId.toString();
-  },
+  }
   
   async update( id: string, newPost: PostInputDto ) {
     this._checkObjectId(id);
@@ -34,7 +36,7 @@ export const postRepository = {
     }   
     
     return;
-  },
+  }
   
   async delete( id: string ) {
     this._checkObjectId(id);
@@ -50,13 +52,13 @@ export const postRepository = {
     }
 
     return;
-  },
+  }
   
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 }

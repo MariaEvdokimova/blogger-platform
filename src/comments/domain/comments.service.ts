@@ -1,11 +1,17 @@
 import { ObjectId, WithId } from "mongodb";
 import { CommentInputDto } from "../dto/comment.input-dto";
-import { commentsRepository } from "../repositories/comments.repository";
+import { CommentsRepository } from "../repositories/comments.repository";
 import { Comment } from "../types/comment";
 import { PostViewModel } from "../../posts/types/post-view-model";
 import { User } from "../../users/entities/user.entity";
+import { inject, injectable } from "inversify";
 
-export const commentsService = {
+@injectable()
+export class CommentsService {
+  constructor(
+    @inject(CommentsRepository) public commentsRepository: CommentsRepository
+  ){}
+
   async create( comment: CommentInputDto, post: PostViewModel, user: WithId<User> ): Promise<string> {
     const { content } = comment;
     const { id: postId } = post;
@@ -21,25 +27,25 @@ export const commentsService = {
       postId: new ObjectId(postId),
     } 
 
-    return await commentsRepository.create( newComment );
-  },
+    return await this.commentsRepository.create( newComment );
+  }
   
   async update( id: string, dto: CommentInputDto ): Promise<void> {
     const newComment = {
       content: dto.content
     }
 
-    await commentsRepository.update(id, newComment);
+    await this.commentsRepository.update(id, newComment);
     return;
-  },
+  }
 
   async delete(id: string ): Promise<void> {
-    await commentsRepository.delete(id);
+    await this.commentsRepository.delete(id);
     return;
-  },
+  }
 
   async verifyUserOwnership(id: string, userId: string): Promise<void> {
-    await commentsRepository.verifyUserOwnership( id, userId);
+    await this.commentsRepository.verifyUserOwnership( id, userId);
     return;
-  },
+  }
 }

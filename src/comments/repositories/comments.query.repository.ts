@@ -4,8 +4,10 @@ import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { Comment } from "../types/comment";
 import { CommentViewModel } from "../types/comment-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
+import { injectable } from "inversify";
 
-export const commentsQueryRepository = {
+@injectable()
+export class CommentsQueryRepository {
   async getCommentsInPost( dto: PaginationQueryParamsDto, postId: string ): Promise<WithId<Comment>[]> {
     const { pageNumber, pageSize, sortBy, sortDirection } = dto;
 
@@ -15,12 +17,11 @@ export const commentsQueryRepository = {
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
       .toArray();
-  },
+  }
 
   async getCommentsInPostCount( postId: string ): Promise<number> {
     return commentCollection.countDocuments({ postId: new ObjectId(postId) });
-  },
-  
+  }  
 
   async findByIdOrFail(id: string): Promise<CommentViewModel | null> {
     this._checkObjectId(id);
@@ -32,7 +33,7 @@ export const commentsQueryRepository = {
     }
     
     return comment ? this._getInView(comment) : null;
-  },
+  }
 
   async mapPaginationViewMdel (
     dto: {
@@ -49,9 +50,9 @@ export const commentsQueryRepository = {
       totalCount: dto.commentsCount,
       items: dto.comments.map(this._getInView)
     };
-  },
+  }
   
-  _getInView ( comment: WithId<Comment> ) {
+  private _getInView ( comment: WithId<Comment> ) {
     return {
       id: comment._id.toString(),
       content: comment.content,
@@ -61,13 +62,13 @@ export const commentsQueryRepository = {
       },
       createdAt: comment.createdAt
     }
-  },
+  }
 
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 };

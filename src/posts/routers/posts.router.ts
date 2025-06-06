@@ -1,39 +1,35 @@
 import { Router } from "express";
-import { getPostHandler } from "./handlers/get-post.handler";
 import { inputValidationResultMiddleware } from "../../core/middlewares/validation/input-validtion-result.middleware";
 import { postInputDtoValidation } from "../validation/post.input-dto.validation-middlewares";
 import { superAdminGuardMiddleware } from "../../auth/middlewares/super-admin.guard-middleware";
-import { getPostListHandler } from "./handlers/get-post-list.handler";
-import { createPostHandler } from "./handlers/create-post.handler";
-import { updatePostHandler } from "./handlers/update-post.handler";
-import { deletePostHandler } from "./handlers/delete-post.handler";
 import { paginationAndSortingValidation } from "../../core/middlewares/validation/query-pagination-sorting.validation-middlewares";
 import { PostSortField } from "../types/sort";
 import { CommentSortField } from "../../comments/types/sort";
-import { getPostCommentHandler } from "./handlers/get-post-comments.handler";
 import { contentValidation } from "../../comments/validation/comment.input-dto.validation-middlewares";
 import { accessTokenGuard } from "../../auth/routers/guards/access.token.guard";
-import { createPostCommentHandler } from "./handlers/create-post-comment.handler";
+import { container } from "../../composition-root";
+import { PostsController } from "./posts.controller";
 
+const postsController = container.get(PostsController);
 export const postsRoute = Router({});
 
 postsRoute
   .get('',
     paginationAndSortingValidation( PostSortField ),   
     inputValidationResultMiddleware, 
-    getPostListHandler
+    postsController.getPostList.bind(postsController)
   )
 
   .get(
     '/:id', 
-    getPostHandler
+    postsController.getPost.bind(postsController)
   )
 
   .get(
     '/:postId/comments',
     paginationAndSortingValidation( CommentSortField ),   
     inputValidationResultMiddleware, 
-    getPostCommentHandler
+    postsController.getPostComment.bind(postsController)
   )
 
   .post(
@@ -41,7 +37,7 @@ postsRoute
     superAdminGuardMiddleware,
     postInputDtoValidation,
     inputValidationResultMiddleware, 
-    createPostHandler
+    postsController.createPost.bind(postsController)
   )
 
   .post(
@@ -49,7 +45,7 @@ postsRoute
     accessTokenGuard,
     contentValidation, 
     inputValidationResultMiddleware, 
-    createPostCommentHandler
+    postsController.createPostComment.bind(postsController)
   )
 
   .put(
@@ -57,11 +53,11 @@ postsRoute
     superAdminGuardMiddleware,
     postInputDtoValidation,
     inputValidationResultMiddleware, 
-    updatePostHandler
+    postsController.updatePost.bind(postsController)
   )
 
   .delete(
     '/:id', 
     superAdminGuardMiddleware,
-    deletePostHandler
+    postsController.deletePost.bind(postsController)
   )

@@ -160,7 +160,7 @@ components:
           type:	string
           format: date-time
 
-    commentatorInfo:
+    CommentatorInfo:
       type: object
       required:
         - userId

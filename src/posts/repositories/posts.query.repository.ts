@@ -4,8 +4,10 @@ import { Post } from "../types/post";
 import { postCollection } from "../../db/mongo.db";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { PostViewModel } from "../types/post-view-model";
+import { injectable } from "inversify";
 
-export const postsQueryRepository = {
+@injectable()
+export class PostsQueryRepository {
   async getPosts( dto: PaginationQueryParamsDto ): Promise<WithId<Post>[]> {
     const { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm } = dto;
 
@@ -20,7 +22,7 @@ export const postsQueryRepository = {
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
       .toArray();
-  },
+  }
 
   async getPostsCount( searchNameTerm?: string | ObjectId | null ): Promise<number> {
     const filter: any = {};
@@ -28,12 +30,12 @@ export const postsQueryRepository = {
       filter.blogId = new ObjectId(searchNameTerm);
     }
     return postCollection.countDocuments( filter );
-  },
+  }
   
   async findById(id: string): Promise<WithId<Post> | null> {
     this._checkObjectId(id);
     return postCollection.findOne({ _id: new ObjectId(id)});
-  },
+  }
 
   async findByIdOrFail(id: string): Promise<PostViewModel> {
     this._checkObjectId(id);
@@ -45,7 +47,7 @@ export const postsQueryRepository = {
     }
     
     return this._getInView(post);
-  },
+  }
 
   async mapPaginationViewMdel (
     dto: {
@@ -62,9 +64,9 @@ export const postsQueryRepository = {
       totalCount: dto.postsCount,
       items: dto.posts.map(this._getInView)
     };
-  },
+  }
 
-  _getInView(post: WithId<Post>): PostViewModel {
+  private _getInView(post: WithId<Post>): PostViewModel {
     return {
       id: post._id.toString(),
       title: post.title,
@@ -74,14 +76,14 @@ export const postsQueryRepository = {
       blogName: post.blogName,
       createdAt: post.createdAt,
     };
-  },
+  }
 
-  _checkObjectId(id: string): boolean | EntityNotFoundError {
+  private _checkObjectId(id: string): boolean | EntityNotFoundError {
     const isValidId = ObjectId.isValid(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }
     return isValidId;
-  },
+  }
 };
 

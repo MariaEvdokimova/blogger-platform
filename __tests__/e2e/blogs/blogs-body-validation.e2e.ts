@@ -5,7 +5,6 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { clearDb } from "../../utils/clear-db";
 import { BlogInputDto } from "../../../src/blogs/dto/blog.input-dto";
 import { getBlogDto } from "../../utils/blogs/get-blog-dto";
 import { routersPaths } from "../../../src/core/paths/paths";
@@ -13,7 +12,6 @@ import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createBlog } from "../../utils/blogs/create-blog";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
-import { appConfig } from "../../../src/core/config/config";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 
