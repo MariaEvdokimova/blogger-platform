@@ -1,12 +1,12 @@
 import { MongoMemoryServer } from 'mongodb-memory-server';
-import { dropDb, runDB, stopDb } from '../../src/db/mongo.db';
 import { testSeeder } from '../utils/auth/test.seeder';
 import { ResultStatus } from '../../src/core/result/resultCode';
 import { ValidationError } from '../../src/core/errors/validation.error';
-import { ConfirmetionStatus } from '../../src/users/entities/user.entity';
 import { NodemailerService } from '../../src/auth/adapters/nodemailer.service';
 import { container } from '../../src/composition-root';
-import { AuthService } from '../../src/auth/domain/auth.service';
+import { AuthService } from '../../src/auth/application/auth.service';
+import { ConfirmetionStatus } from '../../src/users/domain/user.entity';
+import mongoose from 'mongoose';
 
 describe('AUTH-INTEGRATION', () => {
 
@@ -14,11 +14,11 @@ describe('AUTH-INTEGRATION', () => {
 
   beforeAll(async () => {
     const mongoServer = await MongoMemoryServer.create();
-    await runDB(mongoServer.getUri());
+    await mongoose.connect(mongoServer.getUri()); 
   });
 
   beforeEach(async () => {
-    await dropDb();
+    await mongoose.connection.db?.dropDatabase()
   });
 
   beforeEach(() => {
@@ -27,15 +27,13 @@ describe('AUTH-INTEGRATION', () => {
   });
 
   afterAll(async () => {
-    await dropDb();
-    await stopDb();
+    await mongoose.connection.dropDatabase(); // Cleanup
+    await mongoose.disconnect(); // Proper mongoose disconnect
   });
 
   afterAll(done => done());
 
   describe('User Registration', () => {
-    //const nodemailerService = container.get(NodemailerService);
-    //spy = jest.spyOn(nodemailerService, 'sendEmail').mockResolvedValue();
 
     it('✅ should register user with correct data', async () => {
       const authService = container.get(AuthService);

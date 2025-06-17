@@ -4,7 +4,6 @@ import request from "supertest";
 import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { MongoMemoryServer } from "mongodb-memory-server";
@@ -14,6 +13,7 @@ import { testSeeder } from "../../utils/auth/test.seeder";
 import { container } from "../../../src/composition-root";
 import { RateLimitRepository } from "../../../src/auth/repositories/rate-limit.repository";
 import { JwtService } from "../../../src/auth/adapters/jwt.service";
+import mongoose from "mongoose";
 
 
 describe('Security devices API', () => {
@@ -22,18 +22,13 @@ describe('Security devices API', () => {
 
   beforeAll(async () => {
     const mongoServer = await MongoMemoryServer.create();
-    await runDB(mongoServer.getUri());
-    await dropDb();
-  });
-
-  afterAll(async () => {
-    await dropDb();
-    await stopDb();
-  });
-
-  afterAll(done => {
-    done();
-  });
+    await mongoose.connect(mongoServer.getUri());
+    });
+  
+    afterAll(async () => {
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
+    });
 
   describe('🔐 Security Devices', () => {
     const newUser: UserInputDto = {

@@ -16,12 +16,6 @@ export const refreshTokenGuard = async (req: Request, res: Response, next: NextF
      res.sendStatus(HttpStatus.Unauthorized);
      return;
   }
-
-  /*const isTokenInBlackList = await blacklistRepository.isTokenBlacklisted( refreshToken );
-  if ( isTokenInBlackList ) {
-    res.sendStatus(HttpStatus.Unauthorized);
-    return;
-  }*/
   
   const payload = await jwtService.verifyRefresToken( refreshToken );
 

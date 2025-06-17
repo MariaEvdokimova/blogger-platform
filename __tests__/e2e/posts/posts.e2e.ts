@@ -9,12 +9,12 @@ import { createPost } from "../../utils/posts/create-post";
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getPostById } from "../../utils/posts/get-post-by-id";
-import { runDB, stopDb } from "../../../src/db/mongo.db";
 import { PostInputDto } from "../../../src/posts/dto/post.input-dto";
 import { createUser } from "../../utils/users/create-user";
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { generateBearerAuthToken } from "../../utils/generate-berare-auth-token";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 describe('POST API', () => {
   const app = express();
@@ -24,15 +24,12 @@ describe('POST API', () => {
 
    beforeAll(async () => {
       const mongoServer = await MongoMemoryServer.create();
-      await runDB(mongoServer.getUri());
+      await mongoose.connect(mongoServer.getUri());
     });
   
     afterAll(async () => {
-      await stopDb();
-    });
-  
-    afterAll(done => {
-      done();
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
     });
 
   it('✅ Should create post; POST /posts', async () => {
@@ -118,14 +115,7 @@ describe('POST API', () => {
     const createdUser = await createUser(app, newUser);
 
     const token = await generateBearerAuthToken( createdUser.id );
-    /* await request(app)
-      .post(`${AUTH_PATH}/login`)
-      .send({
-        loginOrEmail: newUser.login,
-        password: newUser.password
-      })
-      .expect(HttpStatus.Success)
-*/
+
     const testCommentData = { 
       content: "test comment string test comment string test comment string test comment string test comment string"
     };

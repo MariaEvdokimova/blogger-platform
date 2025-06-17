@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { UserInputDto } from "../dto/user.input-dto";
 import { HttpStatus } from "../../core/types/http-statuses";
 import { errorsHandler } from "../../core/errors/errors.handler";
-import { UsersService } from "../domain/users.service";
+import { UsersService } from "../application/users.service";
 import { UsersQueryRepository } from "../repositories/users.query.repository";
 import { setDefaultSortAandPagination } from "../../core/helpers/set-default-sort-and-pagination";
 import { inject, injectable } from "inversify";
@@ -36,7 +36,6 @@ export class UsersController {
     try {
       const id = req.params.id;
     
-      await this.usersQueryRepository.findByIdOrFail( id );
       await this.usersService.delete( id );
       
       res.status( HttpStatus.NoContent ).send();

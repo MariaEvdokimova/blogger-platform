@@ -1,6 +1,5 @@
-
 import { JwtService } from '../../src/auth/adapters/jwt.service';
-import { AuthService } from '../../src/auth/domain/auth.service';
+import { AuthService } from '../../src/auth/application/auth.service';
 import { container } from '../../src/composition-root';
 import { ResultStatus } from '../../src/core/result/resultCode';
 

@@ -1,4 +1,4 @@
-import { injectable } from "inversify";
+/*import { injectable } from "inversify";
 import { blacklistCollection } from "../../db/mongo.db";
 
 @injectable()
@@ -17,3 +17,4 @@ export class BlacklistRepository {
     return blacklistToken !== null;
   }
 }
+*/

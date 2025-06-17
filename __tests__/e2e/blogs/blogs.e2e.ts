@@ -12,8 +12,8 @@ import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
 import { updateBlog } from "../../utils/blogs/update-blog";
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 describe('Blogs API', () => {
   const app = express();
@@ -23,20 +23,16 @@ describe('Blogs API', () => {
 
    beforeAll(async () => {
       const mongoServer = await MongoMemoryServer.create();
-      await runDB(mongoServer.getUri());
+      await mongoose.connect(mongoServer.getUri()); 
     });
   
     beforeEach(async () => {
-      await dropDb();
+      await mongoose.connection.db?.dropDatabase()
     });
   
     afterAll(async () => {
-      await dropDb();
-      await stopDb();
-    });
-  
-    afterAll(done => {
-      done();
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
     });
 
   it('✅ Should create blog; POST /blogs', async () => {
@@ -82,7 +78,6 @@ describe('Blogs API', () => {
     };
 
     await updateBlog(app, createdBlog.id, blogUpdateData);
-    
     const blogResponse = await getBlogById(app, createdBlog.id);
 
     expect(blogResponse).toEqual({

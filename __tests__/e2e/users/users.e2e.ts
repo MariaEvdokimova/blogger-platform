@@ -5,12 +5,12 @@ import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createUser } from "../../utils/users/create-user";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 describe('Users API', () => {
   const app = express();
@@ -20,19 +20,16 @@ describe('Users API', () => {
 
    beforeAll(async () => {
       const mongoServer = await MongoMemoryServer.create();
-      await runDB(mongoServer.getUri());
+      await mongoose.connect(mongoServer.getUri()); 
     });
   
     beforeEach(async () => {
-      await dropDb();
+      await mongoose.connection.db?.dropDatabase()
     });
   
     afterAll(async () => {
-      await stopDb();
-    });
-  
-    afterAll(done => {
-      done();
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
     });
 
   it('shouldn`t create user without authorization; POST /users', async () => {

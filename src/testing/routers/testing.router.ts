@@ -1,18 +1,23 @@
 import { Response, Router } from "express";
 import { HttpStatus } from "../../core/types/http-statuses";
-import { blacklistCollection, blogCollection, commentCollection, postCollection, sessionsCollection, userCollection } from "../../db/mongo.db";
+import { UserModel } from "../../users/domain/user.entity";
+import { PostModel } from "../../posts/domain/post.entity";
+import { BlogModel } from "../../blogs/domain/blog.entity";
+import { CommentModel } from "../../comments/domain/comment.entity";
+import { SecurityDeviceModel } from "../../securityDevices/domain/securityDevices.entity";
+import { RateLimitModel } from "../../auth/domain/rate-limit.entity";
 
 export const testingRouter = Router({});
 
 testingRouter.delete('', async (_, res: Response) => {
   //truncate db
   await Promise.all([
-    postCollection.deleteMany(),
-    blogCollection.deleteMany(),
-    userCollection.deleteMany(),
-    commentCollection.deleteMany(),
-    blacklistCollection.deleteMany(),
-    sessionsCollection.deleteMany(),
+    UserModel.deleteMany({}),
+    PostModel.deleteMany({}),
+    BlogModel.deleteMany({}),
+    CommentModel.deleteMany({}),
+    SecurityDeviceModel.deleteMany({}),
+    RateLimitModel.deleteMany({}),
   ]);
   res.sendStatus(HttpStatus.NoContent);
 });

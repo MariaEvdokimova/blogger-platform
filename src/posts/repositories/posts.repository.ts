@@ -1,61 +1,21 @@
-import { ObjectId, WithId } from "mongodb";
-import { PostInputDto } from "../dto/post.input-dto";
-import { Post } from "../types/post"
-import { postCollection } from "../../db/mongo.db";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { injectable } from "inversify";
+import { PostDocument, PostModel } from "../domain/post.entity";
+import mongoose, { Types } from "mongoose";
 
 @injectable()
 export class PostRepository {
-  async findById( id: string ): Promise<WithId<Post> | null> {
-    this._checkObjectId(id);
-    return postCollection.findOne({ _id: new ObjectId(id) });
+  async save( post: PostDocument ): Promise<PostDocument> {
+    return await post.save();
   }
   
-  async create( newPost: Post ): Promise<string> {
-    const insertedPost = await postCollection.insertOne( newPost );
-    return insertedPost.insertedId.toString();
-  }
-  
-  async update( id: string, newPost: PostInputDto ) {
+  async findById( id: string ): Promise<PostDocument | null> {
     this._checkObjectId(id);
-    const updatedResult = await postCollection.updateOne(
-      {
-        _id: new ObjectId(id)
-      },
-      {
-        $set: { 
-          ...newPost,
-          blogId: new ObjectId(newPost.blogId),
-        }
-      }
-    );
-
-    if ( updatedResult.matchedCount < 1 ) {
-      throw new EntityNotFoundError();
-    }   
-    
-    return;
-  }
-  
-  async delete( id: string ) {
-    this._checkObjectId(id);
-    
-    const deletedResult = await postCollection.deleteOne(
-      {
-        _id: new ObjectId(id)
-      }
-    );
-
-    if ( deletedResult.deletedCount < 1) {
-      throw new EntityNotFoundError();
-    }
-
-    return;
+    return PostModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null });
   }
   
   private _checkObjectId(id: string): boolean | EntityNotFoundError {
-    const isValidId = ObjectId.isValid(id);
+    const isValidId = mongoose.isValidObjectId(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }

@@ -15,6 +15,6 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*", "src/securityDevices/domain/securityDevices.service.ts"],
+  "include": ["src/**/*", "src/securityDevices/application/securityDevices.service.ts"],
   "exclude": ["__tests__", "dist", "node_modules"]
 }
