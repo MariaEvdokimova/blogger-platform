@@ -1,4 +1,4 @@
-import { blacklistCollection } from "./mongo.db";
+/*import { blacklistCollection } from "./mongo.db";
 
 export async function initIndexes() {
   await blacklistCollection.createIndex(
@@ -6,3 +6,4 @@ export async function initIndexes() {
     { expireAfterSeconds: 60 * 60 * 24 * 8 } // 8 дней
   );
 }
+*/

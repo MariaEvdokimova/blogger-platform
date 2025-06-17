@@ -9,7 +9,7 @@ import { PasswordRecoveryInputDto } from "../dto/password-recovery.input-dto";
 import { RegistrationConfirmationInputDto } from "../dto/registration-confirmation.input-dto";
 import { RegistrationEmailResendingInputDto } from "../dto/registration-email-resending.input-dto";
 import { UserInputDto } from "../../users/dto/user.input-dto";
-import { AuthService } from "../domain/auth.service";
+import { AuthService } from "../application/auth.service";
 import { CookieService } from "../adapters/cookie.service";
 import { inject, injectable } from "inversify";
 

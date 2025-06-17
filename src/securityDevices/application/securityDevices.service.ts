@@ -10,12 +10,12 @@ export class SecurityDevicesService {
   ){}
 
   async deleteDeviceById ( userId: string, deviceId: string ): Promise<void>{
-    const userIdCheck = await this.securityDevicesRepository.findUserByDeviceId( deviceId );
-    if ( !userIdCheck ) {
+    const DeviceIdCheck = await this.securityDevicesRepository.findUserByDeviceId( deviceId );
+    if ( !DeviceIdCheck ) {
       throw new EntityNotFoundError();
     }
 
-    if ( userIdCheck !== userId ){
+    if ( DeviceIdCheck.userId !== userId ){
       throw new ForbiddenError();
     }
 

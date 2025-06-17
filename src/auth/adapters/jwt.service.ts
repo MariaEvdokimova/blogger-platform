@@ -41,7 +41,7 @@ export class JwtService {
     try {
       return jwt.verify(token, appConfig.JWT_SECRET) as AccessTokenPayload;
     } catch (error) {
-      console.error("Token verify some error");
+      console.error("Acsess Token verify some error");
       return null;
     }
   }
@@ -56,7 +56,7 @@ export class JwtService {
         exp: payload.exp,
       }
     } catch (error) {
-      console.error("Token verify some error");
+      console.log("Refres Token verify some error ", error);
       return null;
     }
   }

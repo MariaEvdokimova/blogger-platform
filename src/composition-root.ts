@@ -6,31 +6,32 @@ import { CookieService } from "./auth/adapters/cookie.service";
 import { EmailExamples } from "./auth/adapters/emailExamples";
 import { JwtService } from "./auth/adapters/jwt.service";
 import { NodemailerService } from "./auth/adapters/nodemailer.service";
-import { AuthService } from "./auth/domain/auth.service";
-import { BlacklistRepository } from "./auth/repositories/blacklis.repository";
+import { AuthService } from "./auth/application/auth.service";
 import { RateLimitRepository } from "./auth/repositories/rate-limit.repository";
 import { AuthController } from "./auth/routers/auth.controller";
-import { BlogsService } from "./blogs/domain/blogs.service";
+import { BlogsService } from "./blogs/application/blogs.service";
 import { BlogsQueryRepository } from "./blogs/repositories/blogs.query.repository";
 import { BlogsRepository } from "./blogs/repositories/blogs.repository";
 import { BlogsController } from "./blogs/routers/blogs.controller";
-import { CommentsService } from "./comments/domain/comments.service";
+import { CommentsService } from "./comments/application/comments.service";
 import { CommentsQueryRepository } from "./comments/repositories/comments.query.repository";
 import { CommentsRepository } from "./comments/repositories/comments.repository";
 import { CommentsController } from "./comments/routers/comments.controller";
-import { PostService } from "./posts/domain/post.service";
+import { PostService } from "./posts/application/post.service";
 import { PostsQueryRepository } from "./posts/repositories/posts.query.repository";
 import { PostRepository } from "./posts/repositories/posts.repository";
 import { PostsController } from "./posts/routers/posts.controller";
-import { SecurityDevicesService } from "./securityDevices/domain/securityDevices.service";
+import { SecurityDevicesService } from "./securityDevices/application/securityDevices.service";
 import { SecurityDevicesQueryRepository } from "./securityDevices/repositories/securityDevices.query.repository";
 import { SecurityDevicesRepository } from "./securityDevices/repositories/securityDevices.repository";
 import { SecurityDevicesController } from "./securityDevices/routers/security-devices.controller";
 import { UuidService } from "./users/adapters/uuid.service";
-import { UsersService } from "./users/domain/users.service";
+import { UsersService } from "./users/application/users.service";
 import { UsersQueryRepository } from "./users/repositories/users.query.repository";
 import { UsersRepository } from "./users/repositories/users.repository";
 import { UsersController } from "./users/routers/users.controller";
+import { CommentLikesRepository } from "./comments/repositories/comment-likes.repository";
+import { CommentsLikesQueryRepository } from "./comments/repositories/comment-likes.query.repository";
 
 export const container = new Container();
 
@@ -41,7 +42,6 @@ container.bind(JwtService).to(JwtService).inSingletonScope();
 container.bind(NodemailerService).to(NodemailerService).inSingletonScope();
 container.bind(UuidService).to(UuidService).inSingletonScope();
 
-container.bind(BlacklistRepository).to(BlacklistRepository);
 container.bind(RateLimitRepository).to(RateLimitRepository);
 container.bind(BlogsQueryRepository).to(BlogsQueryRepository);
 container.bind(BlogsRepository).to(BlogsRepository);
@@ -53,6 +53,8 @@ container.bind(SecurityDevicesQueryRepository).to(SecurityDevicesQueryRepository
 container.bind(SecurityDevicesRepository).to(SecurityDevicesRepository);
 container.bind(UsersQueryRepository).to(UsersQueryRepository);
 container.bind(UsersRepository).to(UsersRepository);
+container.bind(CommentLikesRepository).to(CommentLikesRepository);
+container.bind(CommentsLikesQueryRepository).to(CommentsLikesQueryRepository);
 
 container.bind(AuthService).to(AuthService);
 container.bind(BlogsService).to(BlogsService);

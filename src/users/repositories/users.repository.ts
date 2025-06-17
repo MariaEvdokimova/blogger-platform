@@ -1,113 +1,58 @@
-import { ObjectId, WithId } from "mongodb";
-import { userCollection } from "../../db/mongo.db";
-import { ValidationError } from "../../core/errors/validation.error";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
-import { ConfirmetionStatus, User } from "../entities/user.entity";
 import { injectable } from "inversify";
+import { UserDocument, UserModel } from "../domain/user.entity";
+import mongoose, { Types } from "mongoose";
 
 @injectable()
 export class UsersRepository {
 
+  async save( user: UserDocument ): Promise<string> {
+    const insertResult = await user.save();
+    return insertResult._id.toString();
+  }
+  
   async doesExistByLoginOrEmail(
     login: string,
     email: string
-  ): Promise<void> {
-    const user = await userCollection.findOne({
+  ): Promise< UserDocument | null> {
+    return UserModel.findOne({
       $or: [{ email }, { login }],
+      deletedAt: null
     });
-    
-    if ( user ) {
-      if ( user.email === email ) {
-        throw new ValidationError( `The email is not unique`, 'email' );
-      } else {  
-        throw new ValidationError( `The login is not unique`, 'login' );
-      }
-    }
-
-    return;
   }
 
-  async findByLoginOrEmail( loginOrEmail: string ): Promise<WithId<User> | null> {
-    return userCollection.findOne( {
+  async findByLoginOrEmail( loginOrEmail: string ): Promise<UserDocument | null> {
+    return UserModel.findOne( {
       $or: [
         { login: loginOrEmail },
         { email: loginOrEmail }
-      ]
+      ], 
+      deletedAt: null
     });
   }
   
-  async findByEmail( email: string ): Promise<WithId<User> | null> {
-    return userCollection.findOne( { email });
+  async findByEmail( email: string ): Promise<UserDocument | null> {
+    return UserModel.findOne({ email, deletedAt: null });
   }
 
-  async create( newUser: User ): Promise<string> {
-    const insertResult = await userCollection.insertOne( newUser );
-    return insertResult.insertedId.toString();
-  }
-
-  async delete ( id: string ): Promise<void> {
+  async findByIdOrFail(id: string): Promise<UserDocument> {
     this._checkObjectId(id);
-    
-    const deleteResult = await userCollection.deleteOne({
-      _id: new ObjectId(id),
-    });
-
-    if (deleteResult.deletedCount < 1) {
+     
+    const user = await UserModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null });
+     
+    if ( !user ) {
       throw new EntityNotFoundError();
     }
-
-    return;
- }
-
- async findUserByConfirmationCode ( code: string ): Promise<WithId<User> | null> {
-    return userCollection.findOne({ "emailConfirmation.confirmationCode": code });
- }
-
- async updateConfirmationStatus ( id: ObjectId ): Promise<void> {
-    await userCollection.updateOne( 
-      {
-        _id: id
-      }, 
-      {
-        $set: { 
-          "emailConfirmation.isConfirmed": ConfirmetionStatus.confirmed
-        }
-      }
-    );
-    return;
-  }
-  
-  async updateConfirmation ( id: ObjectId, expirationDate: Date, confirmationCode: string ): Promise<number> {
-    const updatedResult = await userCollection.updateOne( 
-      {
-        _id: id
-      }, 
-      {
-        $set: { 
-          "emailConfirmation.expirationDate": expirationDate,
-          "emailConfirmation.confirmationCode": confirmationCode,
-        }
-      }
-    );
-    return updatedResult.matchedCount;
+     
+    return user;
   }
 
-  async updatePassword( userId: ObjectId, hash: string ): Promise<void>  {
-    await userCollection.updateOne( 
-      {
-        _id: userId
-      }, 
-      {
-        $set: { 
-          passwordHash: hash
-        }
-      }
-    );
-    return;
+  async findUserByConfirmationCode ( code: string ): Promise<UserDocument | null> {
+    return UserModel.findOne({ "emailConfirmation.confirmationCode": code, deletedAt: null });
   }
 
   private _checkObjectId(id: string): boolean | EntityNotFoundError {
-    const isValidId = ObjectId.isValid(id);
+    const isValidId = mongoose.isValidObjectId(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }

@@ -1,13 +1,12 @@
 import request from 'supertest';
 import { Express } from 'express';
 import { add } from "date-fns/add";
-import { getCollections } from "../../../src/db/mongo.db";
-import { ConfirmetionStatus } from "../../../src/users/entities/user.entity";
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { routersPaths } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { container } from '../../../src/composition-root';
 import { UuidService } from '../../../src/users/adapters/uuid.service';
+import { ConfirmetionStatus, UserModel } from '../../../src/users/domain/user.entity';
 
 const uuidService = container.get(UuidService);
 
@@ -69,12 +68,13 @@ export const testSeeder = {
       }
     };
 
-    const res = await getCollections().userCollection.insertOne(newUser)
-      return {
-        id: res.insertedId.toString(),
-        ...newUser
-      }
-    },
+    const user = new UserModel(newUser);
+    const savedUser = await user.save();
+    return {
+      id: savedUser._id.toString(),
+      ...savedUser.toObject()
+    };
+  },
 
     async loginUser( 
       app: Express, 

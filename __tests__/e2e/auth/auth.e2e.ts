@@ -4,7 +4,6 @@ import request from "supertest";
 import express from "express";
 
 import { setupApp } from "../../../src/setup-app"
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db"
 import { UserInputDto } from "../../../src/users/dto/user.input-dto";
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
@@ -13,6 +12,7 @@ import { MongoMemoryServer } from "mongodb-memory-server";
 import { testSeeder } from "../../utils/auth/test.seeder";
 import { delay } from "../../utils/delay";
 import { appConfig } from "../../../src/core/config/config";
+import mongoose from "mongoose";
 
 describe('Auth API', () => {
   const app = express();
@@ -20,20 +20,16 @@ describe('Auth API', () => {
 
   beforeAll(async () => {
     const mongoServer = await MongoMemoryServer.create();
-    await runDB(mongoServer.getUri());
+    await mongoose.connect(mongoServer.getUri()); 
   });
 
   beforeEach(async () => {
-    await dropDb();
+    await mongoose.connection.db?.dropDatabase()
   });
 
   afterAll(async () => {
-    await dropDb();
-    await stopDb();
-  });
-
-  afterAll(done => {
-    done();
+    await mongoose.connection.dropDatabase(); // Cleanup
+    await mongoose.disconnect(); // Proper mongoose disconnect
   });
 
   it('✅ Should login; POST /auth/login', async () => {
@@ -134,5 +130,5 @@ describe('Auth API', () => {
 
       expect(response.body).toBeInstanceOf(Object);
       expect(response.body.email).toBe(newUser.email);
-    })
+    })    
 })

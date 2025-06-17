@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { SecurityDevicesService } from "../domain/securityDevices.service";
+import { SecurityDevicesService } from "../application/securityDevices.service";
 import { HttpStatus } from "../../core/types/http-statuses";
 import { errorsHandler } from "../../core/errors/errors.handler";
 import { SecurityDevicesQueryRepository } from "../repositories/securityDevices.query.repository";

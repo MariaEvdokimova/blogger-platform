@@ -1,57 +1,41 @@
-import { ObjectId, WithId } from "mongodb";
-import { sessionsCollection } from "../../db/mongo.db";
-import { SecurityDevice } from "../entities/securityDevices.entity";
 import { injectable } from "inversify";
+import mongoose, { Types } from "mongoose";
+import { SecurityDeviceDocument, SecurityDeviceModel } from "../domain/securityDevices.entity";
 
 type FindSecurityDevicesParams = {
-  id: string;
+  deviceId: string;
   userId: string;
 };
 
 @injectable()
 export class SecurityDevicesRepository {
 
-  async createSession ( newSession: SecurityDevice): Promise<string> {
-    const insertResult = await sessionsCollection.insertOne( newSession );
-    return insertResult.insertedId.toString();
+  async save( device: SecurityDeviceDocument ): Promise<SecurityDeviceDocument> {
+    return await device.save();
   }
 
   async findByIdAndUserId({
-    id,
+    deviceId,
     userId,
-  }: FindSecurityDevicesParams):  Promise<WithId<SecurityDevice> | null> {
-    return await sessionsCollection.findOne( {
-        _id: new ObjectId( id ),
-        user_id: userId
+  }: FindSecurityDevicesParams):  Promise<SecurityDeviceDocument | null> {
+    const isValidId = await this._checkObjectId( deviceId );
+    if ( !isValidId ) {
+      return null;
+    }
+
+    return SecurityDeviceModel.findOne( {
+      deviceId: new Types.ObjectId( deviceId ),
+      userId
     });
   }
   
-  async findUserByDeviceId( deviceId: string):  Promise< string | undefined> {
+  async findUserByDeviceId( deviceId: string):  Promise< SecurityDeviceDocument | null> {
     const isValidId = await this._checkObjectId( deviceId );
     if ( !isValidId ) {
-      return;
+      return null;
     }
 
-    const session = await sessionsCollection.findOne( {
-        _id: new ObjectId( deviceId )
-    });
-
-    return session?.userId;
-  }
-
-  async updateSession ( id: string, iat: number, exp: number ): Promise<number> {
-    const updatedResult = await sessionsCollection.updateOne( 
-      {
-        _id: new ObjectId(id)
-      }, 
-      {
-        $set: { 
-          "iat": iat,
-          "exp": exp
-        }
-      }
-    );
-    return updatedResult.matchedCount;
+    return SecurityDeviceModel.findOne({ deviceId: new Types.ObjectId(deviceId) });
   }
 
   async isSessionValid (
@@ -60,8 +44,8 @@ export class SecurityDevicesRepository {
     iat: number,
     exp: number
   ): Promise<boolean> {
-  const session = await sessionsCollection.findOne({
-      _id: new ObjectId(deviceId),
+  const session = await SecurityDeviceModel.findOne({
+      deviceId: new Types.ObjectId(deviceId),
       userId,
       iat,
       exp
@@ -80,9 +64,9 @@ export class SecurityDevicesRepository {
       return 0;
     }
     
-    const deleteResult = await sessionsCollection.deleteOne({ 
+    const deleteResult = await SecurityDeviceModel.deleteOne({ 
       userId, 
-      _id: new ObjectId( deviceId ) 
+      deviceId: new Types.ObjectId( deviceId ) 
     });
     return deleteResult.deletedCount;
   }
@@ -93,10 +77,10 @@ export class SecurityDevicesRepository {
       return 0;
     }
 
-    const deleteResult = await sessionsCollection.deleteMany({ 
+    const deleteResult = await SecurityDeviceModel.deleteMany({ 
       userId, 
-      _id: { 
-        $ne: new ObjectId( deviceId ) 
+      deviceId: { 
+        $ne: new Types.ObjectId( deviceId ) 
       } 
     });
 
@@ -104,6 +88,6 @@ export class SecurityDevicesRepository {
   }
 
   private async _checkObjectId(id: string): Promise<boolean> {
-    return ObjectId.isValid(id);
+    return mongoose.isValidObjectId(id);
   }
 }

@@ -11,8 +11,8 @@ import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
 import { createBlog } from "../../utils/blogs/create-blog";
 import { getBlogById } from "../../utils/blogs/get-blog-by-id";
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 
 describe('Blogs API body validation check', () => {
@@ -24,23 +24,24 @@ describe('Blogs API body validation check', () => {
   const adminToken = generateBasicAuthToken();
 
    beforeAll(async () => {
+      //const mongoServer = await MongoMemoryServer.create();
+      //await runDB(mongoServer.getUri());
       const mongoServer = await MongoMemoryServer.create();
-      await runDB(mongoServer.getUri());
+      await mongoose.connect(mongoServer.getUri()); 
     });
   
     beforeEach(async () => {
-      await dropDb();
+      //await dropDb();
+      await mongoose.connection.db?.dropDatabase()
     });
   
     afterAll(async () => {
-      await dropDb();
-      await stopDb();
+      //await dropDb();
+      //await stopDb();
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
     });
   
-    afterAll(done => {
-      done();
-    });
-
   it('❌ should not create blog when incorrect body passed; POST /blogs', async () => {
     await request(app)
       .post(routersPaths.blogs)

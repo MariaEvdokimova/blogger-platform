@@ -1,33 +1,20 @@
-import { ObjectId, WithId } from "mongodb";
-import { userCollection } from "../../db/mongo.db";
 import { UserViewModel } from "../types/user-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
-import { User } from "../entities/user.entity";
 import { injectable } from "inversify";
+import mongoose, { Types } from "mongoose";
+import { UserDocument, UserModel } from "../domain/user.entity";
 
 @injectable()
 export class UsersQueryRepository {
   async findById( id: string ): Promise<UserViewModel | null> {
     this._checkObjectId(id);
-    const user = await userCollection.findOne({_id: new ObjectId(id)});
+    const user = await UserModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null });
     
     return user ? this._mapToUserViewModel( user ) : null;
   }
 
-  async findByIdOrFail(id: string): Promise<WithId<User>> {
-    this._checkObjectId(id);
-    
-    const user = await userCollection.findOne({ _id: new ObjectId(id)});
-    
-    if ( !user ) {
-      throw new EntityNotFoundError();
-    }
-    
-    return user;
-  }
-  
-  async getUsers( dto: PaginationQueryParamsDto ): Promise<WithId<User>[]> {
+  async getUsers( dto: PaginationQueryParamsDto ): Promise<UserDocument[]> {
     let filter: any = {};
     const { pageNumber, pageSize, sortBy, sortDirection, searchLoginTerm, searchEmailTerm } = dto;
 
@@ -36,16 +23,16 @@ export class UsersQueryRepository {
         $or: [
           { login: { $regex: searchLoginTerm, $options: 'i' } },
           { email: { $regex: searchEmailTerm, $options: 'i' } }
-        ]
+        ], 
+        deletedAt: null
       };
     }
 
-    return userCollection
+    return UserModel
       .find( filter )
       .sort({ [sortBy]: sortDirection })
       .skip( (pageNumber - 1 ) * pageSize)
-      .limit( pageSize )
-      .toArray();
+      .limit( pageSize );     
   }
 
   async getUsersCount( searchLoginTerm: string | null, searchEmailTerm: string | null ): Promise<number> {
@@ -56,14 +43,15 @@ export class UsersQueryRepository {
           $or: [
             { login: { $regex: searchLoginTerm, $options: 'i' } },
             { email: { $regex: searchEmailTerm, $options: 'i' } }
-          ]
+          ], 
+          deletedAt: null
         };
       }
 
-      return userCollection.countDocuments(filter);
+      return UserModel.countDocuments(filter);
     }
 
-   private _mapToUserViewModel(user: WithId<User>): UserViewModel {
+   private _mapToUserViewModel(user: UserDocument): UserViewModel {
     return {
       id: user._id.toString(),
       login: user.login,
@@ -82,7 +70,7 @@ export class UsersQueryRepository {
 
   async mapPaginationViewMdel (
       dto: {
-        users: WithId<User>[], 
+        users: UserDocument[], 
         pageSize: number, 
         pageNumber: number, 
         usersCount: number,
@@ -98,7 +86,7 @@ export class UsersQueryRepository {
     }
     
   private _checkObjectId(id: string): boolean | EntityNotFoundError {
-    const isValidId = ObjectId.isValid(id);
+    const isValidId = mongoose.isValidObjectId(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }

@@ -1,4 +1,48 @@
 paths:
+  /comments/{commentId}/like-status:
+    put:
+      summary: Make like/unlike/dislike/undislike operation
+      tags: [ Comments ]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Like model for make like/dislike/reset operation
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LikeInputModel'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/LikeInputModel'
+          application/*+json:
+            schema:
+              $ref: '#/components/schemas/LikeInputModel'
+      responses:
+        204:
+          description: No Content
+        400:
+          description: If the inputModel has incorrect values
+          content:
+            text/plain:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/APIErrorResult'
+        401: 
+          description: Unauthorized
+        404:
+          description: "If comment with specified id doesn't exists" 
+
   /comments/{commentId}:
     put:
       summary: Update existing comment by id with InputModel
@@ -170,3 +214,18 @@ components:
           type:	string
         userLogin:
           type:	string
+
+    LikeInputModel:
+      type: object
+      required:
+        - likeStatus
+      properties:
+        likeStatus:
+          $ref: '#/components/schemas/LikeStatus'
+      description: Send None if you want to unlike\undislike
+
+    LikeStatus:
+      type: string
+      enum: [None, Like, Dislike]
+      description: Send None if you want to unlike\undislike
+

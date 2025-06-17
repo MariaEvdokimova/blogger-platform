@@ -1,43 +1,35 @@
-import { ObjectId, WithId } from "mongodb";
-import { commentCollection } from "../../db/mongo.db";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
-import { Comment } from "../types/comment";
-import { CommentViewModel } from "../types/comment-view-model";
 import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { injectable } from "inversify";
+import mongoose, { Types } from "mongoose";
+import { CommentDocument, CommentLean, CommentModel, CommentWithMyStatus } from "../domain/comment.entity";
+import { CommentViewModel } from "../types/comment-view-model";
 
 @injectable()
 export class CommentsQueryRepository {
-  async getCommentsInPost( dto: PaginationQueryParamsDto, postId: string ): Promise<WithId<Comment>[]> {
+  async getCommentsInPost( dto: PaginationQueryParamsDto, postId: string ): Promise<CommentLean[]> {
     const { pageNumber, pageSize, sortBy, sortDirection } = dto;
 
-    return commentCollection
-      .find({ postId: new ObjectId(postId) })
+    return CommentModel
+      .find({ postId: new Types.ObjectId(postId), deletedAt: null })
       .sort({ [sortBy]: sortDirection })
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
-      .toArray();
+      .lean()
   }
 
   async getCommentsInPostCount( postId: string ): Promise<number> {
-    return commentCollection.countDocuments({ postId: new ObjectId(postId) });
+    return CommentModel.countDocuments({ postId: new Types.ObjectId(postId), deletedAt: null });
   }  
 
-  async findByIdOrFail(id: string): Promise<CommentViewModel | null> {
+  async findById(id: string ): Promise<CommentLean | null> {
     this._checkObjectId(id);
-    
-    const comment = await commentCollection.findOne({ _id: new ObjectId(id)});
-    
-    if ( !comment ) {
-      throw new EntityNotFoundError();
-    }
-    
-    return comment ? this._getInView(comment) : null;
+    return CommentModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null }).lean();
   }
 
   async mapPaginationViewMdel (
     dto: {
-      comments: WithId<Comment>[], 
+      commentsWithMyStatus: CommentWithMyStatus[], 
       pageSize: number, 
       pageNumber: number, 
       commentsCount: number,
@@ -48,11 +40,11 @@ export class CommentsQueryRepository {
       page: dto.pageNumber,
       pageSize: dto.pageSize,
       totalCount: dto.commentsCount,
-      items: dto.comments.map(this._getInView)
+      items: dto.commentsWithMyStatus.map(this.getInView)
     };
   }
   
-  private _getInView ( comment: WithId<Comment> ) {
+  getInView ( comment: CommentWithMyStatus ): CommentViewModel {
     return {
       id: comment._id.toString(),
       content: comment.content,
@@ -60,12 +52,17 @@ export class CommentsQueryRepository {
         userId: comment.commentatorInfo.userId.toString(),
         userLogin: comment.commentatorInfo.userLogin,
       },
+      likesInfo: {
+        likesCount: comment.likesInfo.likesCount,
+        dislikesCount: comment.likesInfo.dislikesCount,
+        myStatus: comment.likesInfo.myStatus,
+      },
       createdAt: comment.createdAt
     }
   }
 
   private _checkObjectId(id: string): boolean | EntityNotFoundError {
-    const isValidId = ObjectId.isValid(id);
+    const isValidId = mongoose.isValidObjectId(id);
     if ( !isValidId ) {
       throw new EntityNotFoundError();
     }

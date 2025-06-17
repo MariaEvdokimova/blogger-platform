@@ -4,6 +4,7 @@ import { contentValidation } from "../validation/comment.input-dto.validation-mi
 import { inputValidationResultMiddleware } from "../../core/middlewares/validation/input-validtion-result.middleware";
 import { container } from "../../composition-root";
 import { CommentsController } from "./comments.controller";
+import { likeStatusValidation } from "../validation/like-status.input-dto.validation";
 
 const commentsController = container.get(CommentsController);
 export const commentsRouter = Router({});
@@ -20,6 +21,14 @@ commentsRouter
     contentValidation,
     inputValidationResultMiddleware,
     commentsController.updateComment.bind(commentsController)
+  )
+
+  .put(
+    '/:commentId/like-status',
+    accessTokenGuard,
+    likeStatusValidation,
+    inputValidationResultMiddleware,
+    commentsController.updateLikeStatus.bind(commentsController)
   )
   
   .delete(

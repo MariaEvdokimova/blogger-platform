@@ -29,7 +29,7 @@ postsRoute
     '/:postId/comments',
     paginationAndSortingValidation( CommentSortField ),   
     inputValidationResultMiddleware, 
-    postsController.getPostComment.bind(postsController)
+    postsController.getPostComments.bind(postsController)
   )
 
   .post(

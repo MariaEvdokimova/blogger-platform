@@ -7,9 +7,9 @@ import { setupApp } from "../../../src/setup-app"
 import { generateBasicAuthToken } from "../../utils/generate-admin-auth-token";
 import { routersPaths } from "../../../src/core/paths/paths";
 import { HttpStatus } from "../../../src/core/types/http-statuses";
-import { dropDb, runDB, stopDb } from "../../../src/db/mongo.db";
 import { ObjectId } from "mongodb";
 import { MongoMemoryServer } from "mongodb-memory-server";
+import mongoose from "mongoose";
 
 
 describe('Users API body validation check', () => {
@@ -20,19 +20,16 @@ describe('Users API body validation check', () => {
 
    beforeAll(async () => {
       const mongoServer = await MongoMemoryServer.create();
-      await runDB(mongoServer.getUri());
+      await mongoose.connect(mongoServer.getUri()); 
     });
   
     beforeEach(async () => {
-      await dropDb();
+      await mongoose.connection.db?.dropDatabase()
     });
   
     afterAll(async () => {
-      await stopDb();
-    });
-  
-    afterAll(done => {
-      done();
+      await mongoose.connection.dropDatabase(); // Cleanup
+      await mongoose.disconnect(); // Proper mongoose disconnect
     });
 
   it('❌ should not create user when incorrect body passed; POST /user', async () => {

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { BlogInputDto } from "../dto/blog.input-dto";
-import { BlogsService } from "../domain/blogs.service";
+import { BlogsService } from "../application/blogs.service";
 import { BlogsQueryRepository } from "../repositories/blogs.query.repository";
 import { HttpStatus } from "../../core/types/http-statuses";
 import { errorsHandler } from "../../core/errors/errors.handler";
@@ -8,6 +8,8 @@ import { PostInBlogInputDto } from "../dto/post-in-blog.input-dto";
 import { PostsQueryRepository } from "../../posts/repositories/posts.query.repository";
 import { setDefaultSortAandPagination } from "../../core/helpers/set-default-sort-and-pagination";
 import { inject, injectable } from "inversify";
+import { PostService } from "../../posts/application/post.service";
+import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 
 @injectable()
 export class BlogsController {
@@ -15,6 +17,7 @@ export class BlogsController {
     @inject(BlogsService) public blogsService: BlogsService,
     @inject(BlogsQueryRepository) public blogsQueryRepository: BlogsQueryRepository,
     @inject(PostsQueryRepository) public postsQueryRepository: PostsQueryRepository,
+    @inject(PostService) public postService: PostService
   ){}
 
   async createBlog (
@@ -23,7 +26,7 @@ export class BlogsController {
   ){
     try {    
       const createdBlogId = await this.blogsService.create(req.body);
-      const createdBlog = await this.blogsQueryRepository.findByIdOrFail(createdBlogId);
+      const createdBlog = this.blogsQueryRepository.getInView(createdBlogId);
       
       res.status(HttpStatus.Created).send( createdBlog );
       
@@ -39,9 +42,13 @@ export class BlogsController {
     try {
       const id = req.params.blogId;
 
-      const blog = await this.blogsQueryRepository.findByIdOrFail(id);
-      const createdPostId = await this.blogsService.createPost(req.body, blog!);
-      const createdPost = await this.postsQueryRepository.findByIdOrFail(createdPostId);
+      const blog = await this.blogsQueryRepository.findById(id);
+      if ( !blog ) {
+            throw new EntityNotFoundError();
+          }
+          
+      const createdPostId = await this.postService.create({ ...req.body, blogId: blog!._id.toString()}, blog!);
+      const createdPost = this.postsQueryRepository.getInView(createdPostId);
     
       res.status(HttpStatus.Created).send(createdPost);
       
@@ -57,7 +64,6 @@ export class BlogsController {
     try {
       const id = req.params.id;
       
-      await this.blogsQueryRepository.findByIdOrFail(id);
       await this.blogsService.delete(id);
       
       res.status(HttpStatus.NoContent).send();
@@ -131,8 +137,7 @@ export class BlogsController {
   ){
     try {
       const id = req.params.id;
-      
-      await this.blogsQueryRepository.findByIdOrFail(id);    
+    
       await this.blogsService.update(id, req.body);
   
       res.status(HttpStatus.NoContent).send();
