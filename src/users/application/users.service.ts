@@ -2,7 +2,7 @@ import { UserInputDto } from "../dto/user.input-dto";
 import { UsersRepository } from "../repositories/users.repository";
 import { BcryptService } from '../../auth/adapters/bcrypt.service';
 import { inject, injectable } from "inversify";
-import { ConfirmetionStatus, UserModel } from "../domain/user.entity";
+import { ConfirmetionStatus, UserDocument, UserModel } from "../domain/user.entity";
 import { ValidationError } from "../../core/errors/validation.error";
 
 @injectable()
@@ -27,18 +27,19 @@ export class UsersService {
 
     const passwordHash = await this.bcryptService.generateHash( password );
 
-    const newUser = new UserModel();
-    newUser.login = login;
-    newUser.email = email;
-    newUser.passwordHash = passwordHash;
-    newUser.emailConfirmation.isConfirmed = ConfirmetionStatus.confirmed;
+    const newUser = UserModel.createUser({
+      login,
+      email,
+      passwordHash,
+      isConfirmed: ConfirmetionStatus.confirmed,
+    });
 
     return await this.usersRepository.save( newUser );
   }
 
   async delete ( id: string ): Promise<void> {
     const user = await this.usersRepository.findByIdOrFail( id );
-    user.deletedAt = new Date();
+    user.markAsDeleted();
     await this.usersRepository.save( user );
     return;
   }

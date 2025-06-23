@@ -13,11 +13,11 @@ export const rateLimitMiddleware = async (
 ) => {
   const ip = req.ip || '';
 
-  const newAttempt = new RateLimitModel();
-  newAttempt.ip = ip;
-  newAttempt.url = req.originalUrl;
-  newAttempt.date = new Date();
-
+  const newAttempt = RateLimitModel.createRateLimit({
+    ip,
+    url: req.originalUrl,
+  });
+  
   await rateLimitRepository.save( newAttempt );
 
   const attempts = await rateLimitRepository.getAttemptsCountFromDate( ip, req.originalUrl );

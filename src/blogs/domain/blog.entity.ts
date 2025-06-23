@@ -1,20 +1,18 @@
-import mongoose, { HydratedDocument, model, Model, Types } from "mongoose";
+import mongoose, { HydratedDocument, model, Model } from "mongoose";
+import { BlogEntity } from "../models/Blogs.entity";
 
 const BLOGS_COLLECTION_NAME = 'blogs';
 
-export interface Blog {
-  name:	string;
-  description: string;
-  websiteUrl:	string;
-  createdAt: Date;
-  isMembership: boolean;
-  deletedAt: Date | null; 
+interface BlogMethods {
+  markAsDeleted(): void;
+  updateBlogInfo( name: string, description: string, websiteUrl: string): void;
 }
 
-type BlogModel = Model<Blog>;
-export type BlogDocument = HydratedDocument<Blog>;
+type BlogStatics = typeof BlogEntity;
+type BlogModel = Model<BlogEntity, {}, BlogMethods> & BlogStatics;
+export type BlogDocument = HydratedDocument<BlogEntity, BlogMethods>;
 
-const BlogSchema = new mongoose.Schema<Blog>({
+const BlogSchema = new mongoose.Schema<BlogEntity, BlogModel, BlogMethods>({
   name:	{ type: String, required: true },
   description: { type: String, required: true },
   websiteUrl:	{ type: String, required: true },
@@ -23,4 +21,5 @@ const BlogSchema = new mongoose.Schema<Blog>({
   deletedAt: { type: Date, default: null },
 });
 
-export const BlogModel = model<Blog, BlogModel>( BLOGS_COLLECTION_NAME, BlogSchema );
+BlogSchema.loadClass(BlogEntity);
+export const BlogModel = model<BlogEntity, BlogModel>( BLOGS_COLLECTION_NAME, BlogSchema );

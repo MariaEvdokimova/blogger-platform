@@ -3,12 +3,12 @@ import { PaginationQueryParamsDto } from "../../core/dto/pagination.input-dto";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { PostViewModel } from "../types/post-view-model";
 import { injectable } from "inversify";
-import { PostDocument, PostModel } from "../domain/post.entity";
+import { PostDocument, PostLean, PostModel, PostWithMyStatus } from "../domain/post.entity";
 import mongoose, { Types } from "mongoose";
 
 @injectable()
 export class PostsQueryRepository {
-  async getPosts( dto: PaginationQueryParamsDto ): Promise<PostDocument[]> {
+  async getPosts( dto: PaginationQueryParamsDto ): Promise<PostLean[]> {
     const { pageNumber, pageSize, sortBy, sortDirection, searchNameTerm } = dto;
 
     const filter: any = {};
@@ -22,6 +22,7 @@ export class PostsQueryRepository {
       .sort({ [sortBy]: sortDirection })
       .skip( (pageNumber - 1 ) * pageSize)
       .limit( pageSize )
+      .lean()
   }
 
   async getPostsCount( searchNameTerm?: string | ObjectId | null ): Promise<number> {
@@ -33,21 +34,14 @@ export class PostsQueryRepository {
     return PostModel.countDocuments( filter );
   }
   
-  async findByIdOrFail(id: string): Promise<PostViewModel> {
+  async findById(id: string ): Promise<PostLean | null> {
     this._checkObjectId(id);
-    
-    const post = await PostModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null });
-    
-    if ( !post ) {
-      throw new EntityNotFoundError();
-    }
-    
-    return this.getInView(post);
+    return PostModel.findOne({ _id: new Types.ObjectId(id), deletedAt: null }).lean();
   }
 
   async mapPaginationViewMdel (
     dto: {
-      posts: PostDocument[], 
+      posts: PostWithMyStatus[], 
       pageSize: number, 
       pageNumber: number, 
       postsCount: number,
@@ -62,7 +56,7 @@ export class PostsQueryRepository {
     };
   }
 
-  getInView(post: PostDocument): PostViewModel {
+  getInView(post: PostWithMyStatus): PostViewModel {
     return {
       id: post._id.toString(),
       title: post.title,
@@ -71,6 +65,18 @@ export class PostsQueryRepository {
       blogId: post.blogId.toString(),
       blogName: post.blogName,
       createdAt: post.createdAt,
+      extendedLikesInfo: {
+        likesCount: post.extendedLikesInfo.likesCount,
+        dislikesCount: post.extendedLikesInfo.dislikesCount,
+        myStatus: post.extendedLikesInfo.myStatus,
+        newestLikes: post.extendedLikesInfo.newestLikes.map( newLikes => {
+          return {
+            addedAt: newLikes.addedAt,
+            login: newLikes.login,
+            userId: newLikes.userId,          
+          }
+      })
+      },
     };
   }
 

@@ -47,6 +47,12 @@ export class UsersRepository {
     return user;
   }
 
+  async findByUserIds(userIds: Types.ObjectId[]): Promise<UserDocument[]>{
+    return UserModel.find({
+      _id: { $in: userIds }
+    }).exec();
+  }
+
   async findUserByConfirmationCode ( code: string ): Promise<UserDocument | null> {
     return UserModel.findOne({ "emailConfirmation.confirmationCode": code, deletedAt: null });
   }

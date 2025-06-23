@@ -9,7 +9,6 @@ import { EmailExamples } from "../adapters/emailExamples";
 import { RegistrationConfirmationInputDto } from "../dto/registration-confirmation.input-dto";
 import { ValidationError } from "../../core/errors/validation.error";
 import { RegistrationEmailResendingInputDto } from "../dto/registration-email-resending.input-dto";
-import { add } from "date-fns/add";
 import { Result } from "../../core/result/result.type";
 import { ResultStatus } from "../../core/result/resultCode";
 import { IdType } from "../../core/types/id";
@@ -20,7 +19,7 @@ import { PasswordRecoveryInputDto } from "../dto/password-recovery.input-dto";
 import { NewPasswordInputDto } from "../dto/new-password.input-dto";
 import { inject, injectable } from "inversify";
 import { ConfirmetionStatus, UserDocument, UserModel } from "../../users/domain/user.entity";
-import { SecurityDeviceDocument, SecurityDeviceModel } from "../../securityDevices/domain/securityDevices.entity";
+import { SecurityDeviceModel } from "../../securityDevices/domain/securityDevices.entity";
 import { Types } from "mongoose";
 
 type SessionData = {
@@ -62,14 +61,15 @@ export class AuthService {
 
     const tokens = await this._createPairsOfTokens({ userId, deviceId: deviceId.toString() });
     const payloadRefresToken = await this.jwtService.verifyRefresToken( tokens.refreshToken );
-  
-    const device = new SecurityDeviceModel();
-    device.userId = userId;
-    device.deviceId = deviceId;
-    device.deviceName = deviceName;
-    device.ip = ip;
-    device.iat = payloadRefresToken!.iat || 0;
-    device.exp = payloadRefresToken!.exp || 0;
+ 
+    const device = SecurityDeviceModel.createUser({
+      userId,
+      deviceId,
+      deviceName,
+      ip,
+      iat: payloadRefresToken?.iat,
+      exp: payloadRefresToken?.exp,
+    });
 
     await this.securityDevicesRepository.save( device );
     return tokens; 
@@ -97,10 +97,7 @@ export class AuthService {
     )
     .catch(er => console.error('error in send email:', er));
 
-    const expirationDate = add(new Date(), { hours: 1 });
-
-    user.emailConfirmation.expirationDate = expirationDate;
-    user.emailConfirmation.confirmationCode = code;
+    user.updateEmailConfirmationCode( code );
     await this.usersRepository.save( user );
      
     return {
@@ -115,14 +112,14 @@ export class AuthService {
     
     const user = await this.usersRepository.findUserByConfirmationCode( recoveryCode );
     if ( !user 
-      || user.emailConfirmation.expirationDate < new Date()
+      || (user.emailConfirmation.expirationDate && user.emailConfirmation.expirationDate < new Date())
     ){
       throw new ValidationError( `Code incorrect`, 'recoveryCode' );
     }
 
     const passwordHash = await this.bcryptService.generateHash( newPassword );
 
-    user.passwordHash = passwordHash;
+    user.updatePasswordHash( passwordHash );
     await this.usersRepository.save( user );
 
     return {
@@ -145,8 +142,11 @@ export class AuthService {
 
     const payload = await this.jwtService.verifyRefresToken( tokens.refreshToken );
 
-    device.iat = payload!.iat || 0;
-    device.exp = payload!.exp || 0;      
+    device.updateIatAndExp(
+      payload?.iat || 0,
+      payload?.exp || 0
+    );
+     
     await this.securityDevicesRepository.save( device );
    
     return tokens;
@@ -167,13 +167,13 @@ export class AuthService {
 
     const passwordHash = await this.bcryptService.generateHash( password );
 
-    const newUser = new UserModel();
-      newUser.login = login;
-      newUser.email = email;
-      newUser.passwordHash = passwordHash;
-      newUser.emailConfirmation.confirmationCode = this.uuidService.generate();
-
-    await this.usersRepository.save( newUser );
+    const newUser = UserModel.createUser({
+      login,
+      email,
+      passwordHash,
+      confirmationCode: this.uuidService.generate(),
+    });
+    await this.usersRepository.save( newUser as UserDocument );
 
     this.nodemailerService.sendEmail(
       newUser.email,
@@ -183,7 +183,7 @@ export class AuthService {
     .catch(er => console.error('error in send email:', er));
     return {
       status: ResultStatus.Success,
-      data: newUser,
+      data: newUser as UserDocument,
       extensions: [],
     };
   }
@@ -195,12 +195,12 @@ export class AuthService {
     if ( !user 
       || user.emailConfirmation.isConfirmed === ConfirmetionStatus.confirmed
       || user.emailConfirmation.confirmationCode !== code
-      || user.emailConfirmation.expirationDate < new Date()
+      ||( user.emailConfirmation.expirationDate && user.emailConfirmation.expirationDate < new Date())
     ) {
       throw new ValidationError( `Code incorrect`, 'code' );
     }
 
-    user.emailConfirmation.isConfirmed = ConfirmetionStatus.confirmed;
+    user.updateEmailConfirmed();
     await this.usersRepository.save( user );
 
     return {
@@ -220,14 +220,9 @@ export class AuthService {
       throw new ValidationError( 'email is already confirmed', 'email');
     }
 
-    const newExpirationDate = add(new Date(), {
-      hours: 1,
-      minutes: 3
-    });
     const newConfirmationCode = this.uuidService.generate();
 
-    user.emailConfirmation.expirationDate = newExpirationDate;
-    user.emailConfirmation.confirmationCode = newConfirmationCode;
+    user.updateEmailConfirmationCode( newConfirmationCode );
     await this.usersRepository.save( user );
 
     this.nodemailerService.sendEmail(

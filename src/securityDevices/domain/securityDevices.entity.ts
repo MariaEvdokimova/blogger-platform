@@ -1,20 +1,18 @@
-import mongoose, { HydratedDocument, model, Model, Types } from "mongoose";
+import mongoose, { HydratedDocument, model, Model } from "mongoose";
+import { SecurityDevicesEntity } from "../models/SecurityDevices.entity";
 
 const SECURITY_DEVICE_COLLECTION_NAME = 'security_device';
 
-export interface SecurityDevice {
-  userId: string;
-  deviceId: Types.ObjectId;
-  deviceName: string;
-  ip: string;
-  iat: number;
-  exp: number;
+interface SecurityDeviceMethods {
+  updateIatAndExp( iat: number, exp: number ): void,
 }
 
-type SecurityDeviceModel = Model<SecurityDevice>;
-export type SecurityDeviceDocument = HydratedDocument<SecurityDevice>;
+type SecurityDeviceStatics = typeof SecurityDevicesEntity;
 
-const SecurityDeviceSchema = new mongoose.Schema<SecurityDevice>({
+type SecurityDeviceModel = Model<SecurityDevicesEntity, {}, SecurityDeviceMethods> & SecurityDeviceStatics;
+export type SecurityDeviceDocument = HydratedDocument<SecurityDevicesEntity, SecurityDeviceMethods>;
+
+const SecurityDeviceSchema = new mongoose.Schema<SecurityDevicesEntity, SecurityDeviceModel, SecurityDeviceMethods>({
   userId: { type: String, required: true },
   deviceId: { type: mongoose.Schema.Types.ObjectId, required: true },
   deviceName: { type: String, required: true },
@@ -23,5 +21,5 @@ const SecurityDeviceSchema = new mongoose.Schema<SecurityDevice>({
   exp: { type: Number, required: true },
 });
 
-export const SecurityDeviceModel = model<SecurityDevice, SecurityDeviceModel>( SECURITY_DEVICE_COLLECTION_NAME, SecurityDeviceSchema );
-
+SecurityDeviceSchema.loadClass(SecurityDevicesEntity);
+export const SecurityDeviceModel = model<SecurityDevicesEntity, SecurityDeviceModel>( SECURITY_DEVICE_COLLECTION_NAME, SecurityDeviceSchema );

@@ -16,6 +16,9 @@ import { CommentsLikesQueryRepository } from "../../comments/repositories/commen
 import { LikeStatus } from "../../comments/domain/likes.entity";
 import { AuthService } from "../../auth/application/auth.service";
 import { ResultStatus } from "../../core/result/resultCode";
+import { PostLikeStatusInputDto } from "../dto/post-like-status.input.dto";
+import { PostsLikesQueryRepository } from "../repositories/post-likes.query.repository";
+import { UsersQueryRepository } from "../../users/repositories/users.query.repository";
 
 @injectable()
 export class PostsController {
@@ -27,6 +30,8 @@ export class PostsController {
     @inject(PostService) public postService: PostService,
     @inject(CommentsLikesQueryRepository) public CommentsLikesQueryRepository: CommentsLikesQueryRepository,
     @inject(AuthService) public AuthService: AuthService,
+    @inject(PostsLikesQueryRepository) public PostsLikesQueryRepository: PostsLikesQueryRepository,
+    @inject(UsersQueryRepository) public UsersQueryRepository: UsersQueryRepository,
   ){}
 
 async createPostComment (
@@ -36,7 +41,11 @@ async createPostComment (
   try {
     const postId = req.params.postId;
 
-    const post = await this.postsQueryRepository.findByIdOrFail( postId );
+    const post = await this.postsQueryRepository.findById( postId );
+    if ( !post ) {
+      throw new EntityNotFoundError();
+    }
+
     const createdCommentId = await this.commentsService.create (req.body, post, req.user?.id! );
     const comment = await this.commentsQueryRepository.findById( createdCommentId );
     if ( !comment ) {
@@ -77,10 +86,23 @@ async createPost (
       return;
     }
 
-    const createdPostId = await this.postService.create(req.body, blog);
-    const createdPost = this.postsQueryRepository.getInView(createdPostId);
-      
-    res.status(HttpStatus.Created).send(createdPost); 
+    const post = await this.postService.create(req.body, blog);
+    const createdPost = await this.postsQueryRepository.findById( post._id.toString() );
+    if ( !createdPost ) {
+       throw new EntityNotFoundError();
+    }
+
+    const postWithMyStatus = {
+      ...createdPost,
+      extendedLikesInfo: {
+        ...createdPost.extendedLikesInfo,
+        myStatus: LikeStatus.None
+      }
+    };
+
+    const postViewModel = this.postsQueryRepository.getInView(postWithMyStatus);
+  
+    res.status(HttpStatus.Created).send(postViewModel); 
      
   } catch ( e: unknown ) {
     errorsHandler(e, res);
@@ -109,7 +131,10 @@ async getPostComments (
 ){
   try {
     const id = req.params.postId;    
-    await this.postsQueryRepository.findByIdOrFail( id );
+    const post = await this.postsQueryRepository.findById( id );
+    if ( !post ) {
+      throw new EntityNotFoundError();
+    }
 
     let userId = null;
       if (req.headers.authorization) {
@@ -163,9 +188,37 @@ async getPostList (req: Request, res: Response) {
   try {
     const { pageNumber, pageSize, sortBy, sortDirection } = setDefaultSortAandPagination( req ); 
     
+    let userId = null;
+    if (req.headers.authorization) {
+      const result = await this.AuthService.checkAccessToken(req.headers.authorization);
+              
+      if (result.status === ResultStatus.Success) {
+        userId = result.data!.id;
+      }
+    }
+
     const posts = await this.postsQueryRepository.getPosts({ pageNumber, pageSize, sortBy, sortDirection });
     const postsCount = await this.postsQueryRepository.getPostsCount(); 
-    const postListOutput = await this.postsQueryRepository.mapPaginationViewMdel({ posts, pageSize, pageNumber, postsCount });
+
+    const postIds = posts.map(post => post._id);
+    const likes = userId 
+      ?await this.PostsLikesQueryRepository.findByPostIds(postIds, userId)
+      : [];
+
+    //словарь для поиска статуса лайка
+    const likesMap = new Map<string, LikeStatus>(
+      likes.map(like => [like.postId.toString(), like.status || LikeStatus.None])
+    );
+
+    const postsWithMyStatus = posts.map(post => ({
+      ...post,
+      extendedLikesInfo: {
+        ...post.extendedLikesInfo,
+        myStatus: likesMap.get(post._id.toString()) || LikeStatus.None
+      }
+    }));  
+
+    const postListOutput = await this.postsQueryRepository.mapPaginationViewMdel({ posts: postsWithMyStatus, pageSize, pageNumber, postsCount });
 
     res.status(HttpStatus.Success).send(postListOutput);
 
@@ -181,8 +234,36 @@ async getPost (
   try {
     const id = req.params.id;
     
-    const post = await this.postsQueryRepository.findByIdOrFail(id);
-    res.status(HttpStatus.Success).send(post);
+    let userId = null;
+    if (req.headers.authorization) {
+      const result = await this.AuthService.checkAccessToken(req.headers.authorization);
+              
+      if (result.status === ResultStatus.Success) {
+        userId = result.data!.id;
+      }
+    }
+
+    const post = await this.postsQueryRepository.findById(id);
+    
+    if ( !post ) {
+      throw new EntityNotFoundError();
+    }
+    
+    const likeStatus = userId
+      ? await this.PostsLikesQueryRepository.findStatusByUserIdAndPostId( userId, id)
+      : LikeStatus.None;
+
+    const postWithMyStatus = {
+      ...post,
+      extendedLikesInfo: {
+        ...post.extendedLikesInfo,
+        myStatus: likeStatus || LikeStatus.None
+      }
+    };
+
+    const postViewModel = this.postsQueryRepository.getInView( postWithMyStatus );
+    
+    res.status(HttpStatus.Success).send(postViewModel);
   
   } catch ( e: unknown ) {
     errorsHandler(e, res);
@@ -204,5 +285,22 @@ async updatePost (
     errorsHandler(e, res);
   }
 }
+
+ async updateLikeStatus(
+    req: Request<{postId: string}, {}, PostLikeStatusInputDto>, 
+    res: Response
+  ){
+    try {
+      const postId = req.params.postId;
+      const user = await this.UsersQueryRepository.findById( req.user?.id!);
+ 
+      await this.postService.updateLikeStatus( postId, req.body, req.user?.id!, user?.login! );   
+  
+      res.status(HttpStatus.NoContent).send();
+      
+    } catch (e: unknown) {
+      errorsHandler(e, res);
+    }
+  }
 
 }

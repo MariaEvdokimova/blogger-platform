@@ -25,6 +25,7 @@ export class UsersController {
       res.status(HttpStatus.Created).send(userViewModel);
   
     } catch (e: unknown) {
+      console.log('e ', e)
       errorsHandler(e, res);
     }
   }

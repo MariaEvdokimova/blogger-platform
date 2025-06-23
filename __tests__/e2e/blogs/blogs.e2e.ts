@@ -103,4 +103,15 @@ describe('Blogs API', () => {
       .set('Authorization', adminToken)
       .expect(HttpStatus.NotFound);
   })
+
+  it('✅ Should create post in blog; POST /blogs/:blogId/posts', async () => {
+    const createdBlog = await createBlog(app);
+    
+    await request(app)
+      .post(`${routersPaths.blogs}/${createdBlog.id}/posts`)
+      .set('Authorization', adminToken)
+      .send({content:"new post content",shortDescription:"description",title:"post title"})
+      .expect(HttpStatus.Created);
+  })
+
 });
