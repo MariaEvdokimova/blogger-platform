@@ -1,5 +1,6 @@
 import mongoose, { HydratedDocument, model, Model, Types } from "mongoose";
 import { LikeStatus } from "./likes.entity";
+import { CommentEntity } from "../models/Comments.entity";
 
 const COMMENTS_COLLECTION_NAME = 'comments';
 
@@ -29,10 +30,17 @@ export type CommentLean = Omit<Comment, '_id'> & {
     _id: Types.ObjectId 
 };
 
-type CommentModel = Model<Comment>;
-export type CommentDocument = HydratedDocument<Comment>;
+interface CommentMethods {
+  markAsDeleted(): void;
+  updateContent( content: string ): void;
+  updateLikesInfo ( likeStatus: LikeStatus, userCommentStatus: LikeStatus | undefined): void;
+}
 
-const CommentSchema = new mongoose.Schema<Comment>({
+type CommentStatics = typeof CommentEntity;
+type CommentModel = Model<CommentEntity, {}, CommentMethods> & CommentStatics;
+export type CommentDocument = HydratedDocument<CommentEntity, CommentMethods>;
+
+const CommentSchema = new mongoose.Schema<CommentEntity, CommentModel, CommentMethods>({
   content: { type: String, required: true },
   commentatorInfo: {
     userId: { type: mongoose.Schema.Types.ObjectId, required: true },
@@ -47,4 +55,5 @@ const CommentSchema = new mongoose.Schema<Comment>({
   deletedAt: { type: Date, default: null },
 });
 
-export const CommentModel = model<Comment, CommentModel>( COMMENTS_COLLECTION_NAME, CommentSchema );
+CommentSchema.loadClass(CommentEntity);
+export const CommentModel = model<CommentEntity, CommentModel>( COMMENTS_COLLECTION_NAME, CommentSchema );

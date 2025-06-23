@@ -10,6 +10,10 @@ import { setDefaultSortAandPagination } from "../../core/helpers/set-default-sor
 import { inject, injectable } from "inversify";
 import { PostService } from "../../posts/application/post.service";
 import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
+import { LikeStatus } from "../../posts/domain/likes.entity";
+import { ResultStatus } from "../../core/result/resultCode";
+import { AuthService } from "../../auth/application/auth.service";
+import { PostsLikesQueryRepository } from "../../posts/repositories/post-likes.query.repository";
 
 @injectable()
 export class BlogsController {
@@ -17,7 +21,9 @@ export class BlogsController {
     @inject(BlogsService) public blogsService: BlogsService,
     @inject(BlogsQueryRepository) public blogsQueryRepository: BlogsQueryRepository,
     @inject(PostsQueryRepository) public postsQueryRepository: PostsQueryRepository,
-    @inject(PostService) public postService: PostService
+    @inject(PostService) public postService: PostService,
+    @inject(AuthService) public AuthService: AuthService,
+     @inject(PostsLikesQueryRepository) public PostsLikesQueryRepository: PostsLikesQueryRepository,
   ){}
 
   async createBlog (
@@ -46,11 +52,24 @@ export class BlogsController {
       if ( !blog ) {
             throw new EntityNotFoundError();
           }
-          
-      const createdPostId = await this.postService.create({ ...req.body, blogId: blog!._id.toString()}, blog!);
-      const createdPost = this.postsQueryRepository.getInView(createdPostId);
-    
-      res.status(HttpStatus.Created).send(createdPost);
+
+      const post = await this.postService.create({ ...req.body, blogId: blog!._id.toString()}, blog!);
+      const createdPost = await this.postsQueryRepository.findById( post._id.toString() );
+      if ( !createdPost ) {
+        throw new EntityNotFoundError();
+      }
+
+      const postWithMyStatus = {
+        ...createdPost,
+        extendedLikesInfo: {
+          ...createdPost.extendedLikesInfo,
+          myStatus: LikeStatus.None
+        }
+      };
+
+      const postViewModel = this.postsQueryRepository.getInView(postWithMyStatus);
+
+      res.status(HttpStatus.Created).send(postViewModel);
       
     } catch (e: unknown) {
       errorsHandler(e, res);
@@ -100,6 +119,15 @@ export class BlogsController {
     try {
       const id = req.params.blogId;
       const blog = await this.blogsQueryRepository.findByIdOrFail(id);
+      
+      let userId = null;
+      if (req.headers.authorization) {
+        const result = await this.AuthService.checkAccessToken(req.headers.authorization);
+                
+        if (result.status === ResultStatus.Success) {
+          userId = result.data!.id;
+        }
+      }      
 
       const { pageNumber, pageSize, sortBy, sortDirection } = setDefaultSortAandPagination( req ); 
 
@@ -107,7 +135,26 @@ export class BlogsController {
 
       const posts = await this.postsQueryRepository.getPosts({ pageNumber, pageSize, sortBy, sortDirection, searchNameTerm });
       const postsCount = await this.postsQueryRepository.getPostsCount( searchNameTerm ); 
-      const postListOutput = await this.postsQueryRepository.mapPaginationViewMdel({ posts, pageSize, pageNumber, postsCount });
+
+      const postIds = posts.map(post => post._id);
+      const likes = userId 
+        ?await this.PostsLikesQueryRepository.findByPostIds(postIds, userId)
+        : [];
+
+      //словарь для поиска статуса лайка
+      const likesMap = new Map<string, LikeStatus>(
+        likes.map(like => [like.postId.toString(), like.status || LikeStatus.None])
+      );
+
+      const postsWithMyStatus = posts.map(post => ({
+        ...post,
+        extendedLikesInfo: {
+          ...post.extendedLikesInfo,
+          myStatus: likesMap.get(post._id.toString()) || LikeStatus.None
+        }
+      })); 
+
+      const postListOutput = await this.postsQueryRepository.mapPaginationViewMdel({ posts: postsWithMyStatus, pageSize, pageNumber, postsCount });
 
       res.status(HttpStatus.Success).send(postListOutput);
       

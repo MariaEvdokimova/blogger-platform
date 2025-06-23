@@ -6,7 +6,7 @@ import { routersPaths } from '../../../src/core/paths/paths';
 import { HttpStatus } from '../../../src/core/types/http-statuses';
 import { container } from '../../../src/composition-root';
 import { UuidService } from '../../../src/users/adapters/uuid.service';
-import { ConfirmetionStatus, UserModel } from '../../../src/users/domain/user.entity';
+import { ConfirmetionStatus, UserDocument, UserModel } from '../../../src/users/domain/user.entity';
 
 const uuidService = container.get(UuidService);
 
@@ -27,7 +27,7 @@ export type RegisterUserResultType = {
   createdAt: Date,
   emailConfirmation: {
     confirmationCode: string,
-    expirationDate: Date,
+    expirationDate: Date | null,
     isConfirmed: ConfirmetionStatus
   }
 }

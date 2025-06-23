@@ -9,7 +9,8 @@ import { EntityNotFoundError } from "../../core/errors/entity-not-found.error";
 import { ForbiddenError } from "../../core/errors/forbidden.error";
 import { CommentLikeStatusInputDto } from "../dto/comment-like-status.input.dto";
 import { CommentLikesRepository } from "../repositories/comment-likes.repository";
-import { CommentLikesModel, LikeStatus } from "../domain/likes.entity";
+import { CommentLikesModel } from "../domain/likes.entity";
+import { PostLean } from "../../posts/domain/post.entity";
 
 @injectable()
 export class CommentsService {
@@ -19,19 +20,19 @@ export class CommentsService {
     @inject(CommentLikesRepository) public commentLikesRepository: CommentLikesRepository,
   ){}
 
-  async create( comment: CommentInputDto, post: PostViewModel, id: string ): Promise<string> {
+  async create( comment: CommentInputDto, post: PostLean, id: string ): Promise<string> {
     const user = await this.usersRepository.findByIdOrFail( id );
 
     const { content } = comment;
-    const { id: postId } = post;
+    const { _id: postId } = post;
     const { _id: userId, login } = user;
     
-    const newComment = new CommentModel();
-    newComment.content = content;
-    newComment.commentatorInfo.userId = userId;
-    newComment.commentatorInfo.userLogin = login;
-    newComment.postId = new Types.ObjectId(postId);
-    newComment.createdAt = new Date();
+    const newComment = CommentModel.createComment({
+      content,
+      userId,
+      userLogin: login,
+      postId: new Types.ObjectId(postId),
+    });
 
     return await this.commentsRepository.save( newComment );
   }
@@ -47,7 +48,7 @@ export class CommentsService {
       throw new ForbiddenError();
     }
 
-    commentVerifyed.content = dto.content;
+    commentVerifyed.updateContent( dto.content );
     await this.commentsRepository.save( commentVerifyed );
     
     return;
@@ -64,7 +65,7 @@ export class CommentsService {
       throw new ForbiddenError();
     }
 
-    commentVerifyed.deletedAt = new Date();
+    commentVerifyed.markAsDeleted();
     await this.commentsRepository.save( commentVerifyed );
 
     return;
@@ -80,41 +81,22 @@ export class CommentsService {
     const userCommentStatus = await this.commentLikesRepository.findUserCommentStatus( commentId, userId );
     if ( userCommentStatus && userCommentStatus.status === likeStatus) return;
 
-    switch (likeStatus) {
-      case LikeStatus.None:
-        comment.likesInfo.likesCount > 0 && comment.likesInfo.likesCount--;
-        comment.likesInfo.dislikesCount > 0 && comment.likesInfo.dislikesCount--;
-        break;
-
-      case LikeStatus.Like:
-        if (userCommentStatus?.status === LikeStatus.Dislike && comment.likesInfo.dislikesCount > 0) {
-          comment.likesInfo.dislikesCount--;
-        }
-        comment.likesInfo.likesCount++;
-        break;
-
-      case LikeStatus.Dislike:
-        if (userCommentStatus?.status === LikeStatus.Like && comment.likesInfo.likesCount > 0) {
-          comment.likesInfo.likesCount--;
-        }
-        comment.likesInfo.dislikesCount++;
-        break;
-    }
+    comment.updateLikesInfo( likeStatus, userCommentStatus?.status );
 
     await this.commentsRepository.save( comment );
 
 
     if ( userCommentStatus) {
-      userCommentStatus.status = likeStatus;
+      userCommentStatus.updateLikeStatus( likeStatus );
       await this.commentLikesRepository.save( userCommentStatus );   
       return;   
     }
-    
-    const newStatus = new CommentLikesModel();
-    newStatus.commentId = new Types.ObjectId(commentId); 
-    newStatus.userId = new Types.ObjectId(userId); 
-    newStatus.status = likeStatus;
-    newStatus.createdAt = new Date();
+
+    const newStatus = CommentLikesModel.createLikeStatus({
+      commentId: new Types.ObjectId(commentId),
+      userId: new Types.ObjectId(userId),
+      status: likeStatus,
+    });
 
     await this.commentLikesRepository.save( newStatus );
     

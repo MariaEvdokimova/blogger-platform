@@ -32,6 +32,8 @@ import { UsersRepository } from "./users/repositories/users.repository";
 import { UsersController } from "./users/routers/users.controller";
 import { CommentLikesRepository } from "./comments/repositories/comment-likes.repository";
 import { CommentsLikesQueryRepository } from "./comments/repositories/comment-likes.query.repository";
+import { PostLikesRepository } from "./posts/repositories/post-likes.repository";
+import { PostsLikesQueryRepository } from "./posts/repositories/post-likes.query.repository";
 
 export const container = new Container();
 
@@ -55,6 +57,8 @@ container.bind(UsersQueryRepository).to(UsersQueryRepository);
 container.bind(UsersRepository).to(UsersRepository);
 container.bind(CommentLikesRepository).to(CommentLikesRepository);
 container.bind(CommentsLikesQueryRepository).to(CommentsLikesQueryRepository);
+container.bind(PostLikesRepository).to(PostLikesRepository)
+container.bind(PostsLikesQueryRepository).to(PostsLikesQueryRepository)
 
 container.bind(AuthService).to(AuthService);
 container.bind(BlogsService).to(BlogsService);

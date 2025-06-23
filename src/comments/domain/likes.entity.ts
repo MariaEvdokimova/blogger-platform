@@ -1,4 +1,5 @@
-import mongoose, { HydratedDocument, model, Model, Types } from "mongoose";
+import mongoose, { HydratedDocument, model, Model } from "mongoose";
+import { CommentLikesEntity } from "../models/Likes.entity";
 
 const COLLECTION_NAME = 'comment_likes';
 
@@ -8,21 +9,20 @@ export enum LikeStatus {
   Dislike = 'Dislike',
  };
 
-export interface CommentLikes {
-  commentId: Types.ObjectId; 
-  userId: Types.ObjectId; 
-  status: LikeStatus;
-  createdAt: Date;
+interface CommentLikesMethods {
+  updateLikeStatus ( status: LikeStatus): void 
 }
 
-type CommentLikesModel = Model<CommentLikes>;
-export type CommentLikesDocument = HydratedDocument<CommentLikes>;
+type CommentLikesStatics = typeof CommentLikesEntity;
+type CommentLikesModel = Model<CommentLikesEntity, {}, CommentLikesMethods> & CommentLikesStatics;
+export type CommentLikesDocument = HydratedDocument<CommentLikesEntity, CommentLikesMethods>;
 
-const CommentLikesSchema = new mongoose.Schema<CommentLikes>({
+const CommentLikesSchema = new mongoose.Schema<CommentLikesEntity, CommentLikesModel, CommentLikesMethods>({
   commentId: { type: mongoose.Schema.Types.ObjectId, required: true },
   userId: { type: mongoose.Schema.Types.ObjectId, required: true },
   status: { type: String, enum: LikeStatus, default: LikeStatus.None},
   createdAt: { type: Date, required: true, default: Date.now, immutable: true /* Запрет на изменение */}, 
 });
 
-export const CommentLikesModel = model<CommentLikes, CommentLikesModel>( COLLECTION_NAME, CommentLikesSchema );
+CommentLikesSchema.loadClass(CommentLikesEntity);
+export const CommentLikesModel = model<CommentLikesEntity, CommentLikesModel>( COLLECTION_NAME, CommentLikesSchema );

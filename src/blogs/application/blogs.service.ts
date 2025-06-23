@@ -13,12 +13,7 @@ export class BlogsService {
   async create( blog: BlogInputDto): Promise<BlogDocument> {
     const { name, description, websiteUrl } = blog;
 
-    const newBlog = new BlogModel();
-    newBlog.name = name;
-    newBlog.description = description;
-    newBlog.websiteUrl = websiteUrl;
-    newBlog.isMembership = false;
-    newBlog.createdAt = new Date();
+    const newBlog = BlogModel.createBlog({ name, description, websiteUrl });
 
     return await this.blogsRepository.save( newBlog );
   }
@@ -31,9 +26,7 @@ export class BlogsService {
       throw new EntityNotFoundError();
     }
 
-    blog.name = name;
-    blog.description = description;
-    blog.websiteUrl = websiteUrl;
+    blog.updateBlogInfo( name, description, websiteUrl );
 
     await this.blogsRepository.save(blog);
     return;
@@ -45,7 +38,7 @@ export class BlogsService {
       throw new EntityNotFoundError();
     }
 
-    blog.deletedAt = new Date();
+    blog.markAsDeleted();
     await this.blogsRepository.save(blog);
     return;
   }

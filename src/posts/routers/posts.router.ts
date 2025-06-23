@@ -9,6 +9,7 @@ import { contentValidation } from "../../comments/validation/comment.input-dto.v
 import { accessTokenGuard } from "../../auth/routers/guards/access.token.guard";
 import { container } from "../../composition-root";
 import { PostsController } from "./posts.controller";
+import { likeStatusValidation } from "../../comments/validation/like-status.input-dto.validation";
 
 const postsController = container.get(PostsController);
 export const postsRoute = Router({});
@@ -38,6 +39,14 @@ postsRoute
     postInputDtoValidation,
     inputValidationResultMiddleware, 
     postsController.createPost.bind(postsController)
+  )
+
+  .put(
+    '/:postId/like-status',
+    accessTokenGuard,
+    likeStatusValidation,
+    inputValidationResultMiddleware,
+    postsController.updateLikeStatus.bind(postsController)
   )
 
   .post(
